@@ -18,8 +18,13 @@ function NewProjectModal({ onClose, clusterId, onSuccess }) {
     });
 
     const handleSubmit = async () => {
+        const githubRegex = /^https:\/\/github\.com\/[\w-]+\/[\w.-]+$/;
         if (!form.repoUrl) {
             toast.error('Repository URL is required');
+            return;
+        }
+        if (!githubRegex.test(form.repoUrl)) {
+            toast.error('Please enter a valid GitHub repository URL');
             return;
         }
 

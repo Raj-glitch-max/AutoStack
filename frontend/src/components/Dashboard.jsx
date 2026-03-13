@@ -60,12 +60,16 @@ export default function Dashboard() {
     const { data: clusters, loading: clustersLoading } = useClusters();
     const [activeClusterId, setActiveClusterId] = useState(null);
 
-    // Auto-select first cluster if none selected
+    // Auto-select first cluster if none selected, OR redirect to onboarding if 0 clusters
     useEffect(() => {
-        if (!activeClusterId && clusters?.length > 0) {
-            setActiveClusterId(clusters[0].id);
+        if (!clustersLoading && clusters) {
+            if (clusters.length === 0 && activeTab !== 'settings') {
+                navigate('/onboarding');
+            } else if (!activeClusterId && clusters.length > 0) {
+                setActiveClusterId(clusters[0].id);
+            }
         }
-    }, [clusters, activeClusterId]);
+    }, [clusters, clustersLoading, activeClusterId, activeTab, navigate]);
 
     const activeCluster = clusters?.find(c => c.id === activeClusterId);
 

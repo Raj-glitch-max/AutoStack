@@ -4,6 +4,7 @@ import { Server, Copy, Check, ChevronRight, HelpCircle, Loader2 } from 'lucide-r
 import { TerminalWindow, useCountUp } from '../components/ui/index';
 import { StatusDot } from '../components/ui/index';
 import { useToast } from '../context/ToastContext';
+import { supabase } from '../lib/supabase';
 import confetti from 'canvas-confetti';
 
 const PROVIDERS = {
@@ -29,16 +30,32 @@ function StepIndicator({ current }) {
     );
 }
 
-function Step1({ onNext }) {
+function Step1({ onNext, loading }) {
     const [name, setName] = useState('');
     const [provider, setProvider] = useState('AWS EKS');
     const [region, setRegion] = useState('us-east-1');
+
+    const [error, setError] = useState('');
 
     useEffect(() => {
         setRegion(PROVIDERS[provider][0]);
     }, [provider]);
 
-    const canProceed = name.trim().length > 0;
+    const validateName = (val) => {
+        const regex = /^[a-z0-9-]+$/;
+        if (!val) return '';
+        if (!regex.test(val)) return 'Only lowercase letters, numbers, and dashes allowed';
+        if (val.length > 32) return 'Maximum 32 characters';
+        return '';
+    };
+
+    const handleNameChange = (e) => {
+        const val = e.target.value.toLowerCase();
+        setName(val);
+        setError(validateName(val));
+    };
+
+    const canProceed = name.trim().length > 0 && !error;
 
     return (
         <div className="animate-fadeUp">
@@ -59,9 +76,10 @@ function Step1({ onNext }) {
                 <div className="flex flex-col gap-4">
                     <div>
                         <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-muted)' }}>Cluster name</label>
-                        <input value={name} onChange={e => setName(e.target.value)} placeholder="prod-eks-us-east-1"
+                        <input value={name} onChange={handleNameChange} placeholder="prod-eks-us-east-1"
                             className="w-full px-3 py-2.5 rounded-lg text-sm"
-                            style={{ background: 'var(--bg-card)', border: '1px solid var(--border-default)', color: 'var(--text-primary)', outline: 'none' }} />
+                            style={{ background: 'var(--bg-card)', border: error ? '1px solid var(--red)' : '1px solid var(--border-default)', color: 'var(--text-primary)', outline: 'none' }} />
+                        {error && <span className="text-[11px] text-[var(--red)] mt-1 block">{error}</span>}
                     </div>
                     <div>
                         <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-muted)' }}>Cloud provider</label>
@@ -81,38 +99,51 @@ function Step1({ onNext }) {
                     </div>
                 </div>
 
-                <button onClick={() => canProceed && onNext({ name, provider, region })} disabled={!canProceed}
+                <button onClick={() => canProceed && !loading && onNext({ name, provider, region })} disabled={!canProceed || loading}
                     className="w-full h-[44px] rounded-lg font-medium text-sm text-white cursor-pointer flex items-center justify-center gap-2 mt-6"
-                    style={{ background: canProceed ? 'var(--blue-primary)' : 'var(--border-default)', border: 'none' }}>
-                    Generate install command <ChevronRight size={16} />
+                    style={{ background: (canProceed && !loading) ? 'var(--blue-primary)' : 'var(--border-default)', border: 'none', opacity: loading ? 0.7 : 1 }}>
+                    {loading ? <Loader2 size={16} className="animate-spin" /> : 'Generate install command'}
+                    {!loading && <ChevronRight size={16} />}
                 </button>
             </div>
         </div>
     );
 }
 
-function Step2({ cluster, onNext }) {
+function Step2({ cluster, result, onNext }) {
     const [copied, setCopied] = useState(false);
     const [status, setStatus] = useState('waiting');
+    const toast = useToast();
 
-    const helmCmd = `helm repo add autostack https://charts.autostack.io && \\
-helm install autostack-agent autostack/agent \\
-  --namespace autostack-system \\
-  --create-namespace \\
-  --set controlPlane.url=wss://api.autostack.io \\
-  --set agent.token=demo-token-${Date.now()}`;
+    const helmCmd = result?.command || '';
 
     const handleCopy = () => {
+        if (!helmCmd) return;
         navigator.clipboard.writeText(helmCmd);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     };
 
-    // Simulate agent connection after 5s
+    // Real polling for agent connection
     useEffect(() => {
-        const timer = setTimeout(() => setStatus('connected'), 5000);
-        return () => clearTimeout(timer);
-    }, []);
+        let isSubscribed = true;
+        const poll = async () => {
+            if (!cluster || !result?.cluster_id) return;
+            const { data, error } = await supabase
+                .from('clusters')
+                .select('agent_status')
+                .eq('id', result.cluster_id)
+                .single();
+            
+            if (data?.agent_status === 'healthy') {
+                if (isSubscribed) setStatus('connected');
+                return;
+            }
+            if (isSubscribed) setTimeout(poll, 3000);
+        };
+        poll();
+        return () => { isSubscribed = false; };
+    }, [cluster, result]);
 
     return (
         <div className="animate-fadeUp">
@@ -208,14 +239,37 @@ function Step3({ cluster }) {
 export default function OnboardingPage() {
     const [step, setStep] = useState(1);
     const [cluster, setCluster] = useState(null);
+    const [result, setResult] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const toast = useToast();
+
+    const handleStep1Next = async (c) => {
+        setLoading(true);
+        try {
+            const { data, error } = await supabase.functions.invoke('connect-cluster', {
+                body: { name: c.name, provider: c.provider, region: c.region }
+            });
+
+            if (error) throw error;
+            if (data.error) throw new Error(data.error);
+
+            setCluster(c);
+            setResult(data);
+            setStep(2);
+        } catch (err) {
+            toast.error(err.message || 'Failed to connect cluster');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <div className="min-h-screen flex items-center justify-center px-4 py-12" style={{ background: 'var(--bg-base)' }}>
             <div className="w-full max-w-[640px]">
                 <StepIndicator current={step} />
-                {step === 1 && <Step1 onNext={(c) => { setCluster(c); setStep(2); }} />}
-                {step === 2 && <Step2 cluster={cluster} onNext={() => setStep(3)} />}
-                {step === 3 && <Step3 cluster={cluster} />}
+                {step === 1 && <Step1 onNext={handleStep1Next} loading={loading} />}
+                {step === 2 && <Step2 cluster={cluster} result={result} onNext={() => setStep(3)} />}
+                {step === 3 && <Step3 cluster={{ ...cluster, ...result }} />}
             </div>
         </div>
     );
