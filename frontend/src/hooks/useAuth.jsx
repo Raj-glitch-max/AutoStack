@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback, createContext, useContext } from 'react';
 import { supabase } from '../lib/supabase';
+import { errorTracker } from '../lib/errorTracker';
+import { analytics } from '../lib/analytics';
 
 const AuthContext = createContext(null);
 
@@ -20,6 +22,17 @@ export function AuthProvider({ children }) {
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
             setSession(s);
             setUser(s?.user ?? null);
+            // Wire Sentry + PostHog on every auth state change
+            if (s?.user) {
+                errorTracker.setUser({ id: s.user.id, email: s.user.email });
+                analytics.identify(s.user.id, {
+                    email: s.user.email,
+                    org_id: s.user.user_metadata?.org_id,
+                });
+            } else {
+                errorTracker.setUser(null);
+                analytics.reset();
+            }
         });
 
         return () => subscription.unsubscribe();
@@ -53,6 +66,8 @@ export function AuthProvider({ children }) {
     const signOut = useCallback(async () => {
         const { error } = await supabase.auth.signOut();
         if (error) throw error;
+        errorTracker.setUser(null);
+        analytics.reset();
     }, []);
 
     const resetPassword = useCallback(async (email) => {

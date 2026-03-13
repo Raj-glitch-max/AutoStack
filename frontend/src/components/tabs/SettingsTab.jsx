@@ -1,13 +1,22 @@
 import { useState } from 'react';
 import { Card, Button, Tag, ToggleSwitch } from '../ui/index';
-import { teamMembers } from '../../data';
 import { ShieldAlert, Cloud, PlugZap, Bell, Users, Plus, CheckCircle2 } from 'lucide-react';
-import { useIntegrations } from '../../hooks/useData';
+import { useIntegrations, useSupabaseQuery } from '../../hooks/useData';
+import { useAuth } from '../../hooks/useAuth';
 import { SkeletonRow } from '../ui/Skeleton';
+import EmptyState from '../ui/EmptyState';
 
 export default function SettingsTab() {
     const [subTab, setSubTab] = useState('Credentials');
     const { data: integrations, loading: intsLoading } = useIntegrations();
+    const { user } = useAuth();
+    const orgId = user?.user_metadata?.org_id;
+    const { data: members, loading: membersLoading } = useSupabaseQuery('org_members', {
+        filters: orgId ? { org_id: orgId } : {},
+        orderBy: 'created_at',
+        ascending: true,
+        limit: 50,
+    });
 
     const tabs = [
         { id: 'Credentials', icon: Cloud },
@@ -135,20 +144,41 @@ export default function SettingsTab() {
                             <Button icon={Plus}>Invite member</Button>
                         </div>
                         <Card className="overflow-hidden">
-                            {teamMembers.map((m, i) => (
-                                <div key={i} className="flex items-center justify-between p-4 border-b border-[var(--border-default)] last:border-0 hover:bg-[rgba(255,255,255,0.01)] transition-colors">
-                                    <div className="flex items-center gap-4">
-                                        <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${m.gradient} border border-[var(--border-default)] flex items-center justify-center font-bold text-xs`}>{m.initials}</div>
-                                        <div>
-                                            <div className="font-semibold text-sm">{m.name} <span className="text-[11px] text-[var(--text-muted)] font-normal ml-1">({m.email})</span></div>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                        <Tag small color={m.role === 'Owner' ? 'var(--blue-light)' : m.role === 'Admin' ? 'var(--purple)' : 'var(--text-dim)'}>{m.role}</Tag>
-                                        <button className="text-[var(--text-muted)] hover:text-[var(--text-primary)] w-8 text-center text-lg">⋯</button>
-                                    </div>
+                            {membersLoading ? (
+                                <div className="p-4 space-y-3">
+                                    <SkeletonRow /><SkeletonRow /><SkeletonRow />
                                 </div>
-                            ))}
+                            ) : members.length === 0 ? (
+                                <EmptyState
+                                    icon={Users}
+                                    title="No team members yet"
+                                    description="Invite team members to collaborate on your infrastructure."
+                                    action={{ label: 'Invite member', onClick: () => {} }}
+                                />
+                            ) : (
+                                members.map((m, i) => {
+                                    const initials = (m.user_id === user?.id ? (user.user_metadata?.full_name || user.email || '?') : m.user_id)
+                                        .substring(0, 2).toUpperCase();
+                                    const displayName = m.user_id === user?.id
+                                        ? (user.user_metadata?.full_name || user.email)
+                                        : `Member ${m.user_id.substring(0, 8)}`;
+                                    const displayEmail = m.user_id === user?.id ? user.email : '—';
+                                    return (
+                                        <div key={m.id || i} className="flex items-center justify-between p-4 border-b border-[var(--border-default)] last:border-0 hover:bg-[rgba(255,255,255,0.01)] transition-colors">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-700 border border-[var(--border-default)] flex items-center justify-center font-bold text-xs">{initials}</div>
+                                                <div>
+                                                    <div className="font-semibold text-sm">{displayName} <span className="text-[11px] text-[var(--text-muted)] font-normal ml-1">({displayEmail})</span></div>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-4">
+                                                <Tag small color={m.role === 'owner' ? 'var(--blue-light)' : m.role === 'admin' ? 'var(--purple)' : 'var(--text-dim)'}>{m.role}</Tag>
+                                                <button className="text-[var(--text-muted)] hover:text-[var(--text-primary)] w-8 text-center text-lg">⋯</button>
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            )}
                         </Card>
                     </div>
                 )}

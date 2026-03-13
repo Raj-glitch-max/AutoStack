@@ -34,7 +34,7 @@ export const sendEmail = async ({ to, subject, html, text }) => {
             throw new Error(data.message || 'Failed to send email');
         }
 
-        console.log(`Email sent successfully: ${data.id}`);
+        if (import.meta.env.DEV) console.log(`Email sent successfully: ${data.id}`);
         return { success: true, id: data.id };
     } catch (error) {
         console.error('Email service error:', error);

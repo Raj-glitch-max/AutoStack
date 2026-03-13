@@ -59,9 +59,12 @@ export default function LogsTab({ cluster }) {
         <div className="space-y-6 animate-fadeIn h-full flex flex-col">
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-xl font-bold">Deployment Logs</h2>
+                    <h2 className="text-xl font-bold flex items-center gap-2">
+                        Deployment Logs
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--amber)]/15 text-[var(--amber)] border border-[var(--amber)]/20 uppercase tracking-widest">Sample Data</span>
+                    </h2>
                     <p className="text-[13px] text-[var(--text-muted)] mt-1 flex items-center gap-2">
-                        Real-time <span className="w-1 h-1 rounded-full bg-[var(--text-muted)]" />
+                        Simulated stream — real logs available after agent deployment <span className="w-1 h-1 rounded-full bg-[var(--text-muted)]" />
                         {autoScroll ? 'auto-scroll enabled' : 'auto-scroll paused'}
                     </p>
                 </div>
