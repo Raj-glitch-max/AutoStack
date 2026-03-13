@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AutoStack CI/CD Pipelines Status</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;500;700&amp;family=Syne:wght@400;500;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2463eb",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#07090E",
+                        "card-dark": "#0C0F17",
+                        "border-dark": "#1A2035",
+                        "text-muted": "#92a4c8",
+                        "status-success": "#10b981",
+                        "status-running": "#3b82f6",
+                        "status-failed": "#ef4444",
+                        "status-pending": "#4b5563"
+                    },
+                    fontFamily: {
+                        "display": ["Syne", "sans-serif"],
+                        "body": ["DM Sans", "sans-serif"],
+                        "mono": ["JetBrains Mono", "monospace"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'DM Sans', sans-serif; }
+        h1, h2, h3, h4, h5, h6, .font-display { font-family: 'Syne', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Custom Scrollbar for dark mode */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #07090E;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1A2035;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #242f47;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 overflow-x-hidden min-h-screen flex">
+<!-- Sidebar -->
+<aside class="w-[220px] shrink-0 border-r border-border-dark bg-background-dark flex flex-col justify-between hidden md:flex h-screen sticky top-0">
+<div class="flex flex-col gap-4 p-4">
+<div class="flex items-center gap-3 mb-6">
+<div class="bg-gradient-to-br from-primary to-blue-400 aspect-square rounded-lg size-8 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-primary/20">A</div>
+<div class="flex flex-col">
+<h1 class="text-slate-100 text-base font-display font-bold leading-tight">AutoStack</h1>
+<p class="text-text-muted text-[11px] font-medium uppercase tracking-wider">Kubernetes Ops</p>
+</div>
+</div>
+<nav class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-border-dark transition-colors group text-text-muted hover:text-slate-100" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-border-dark transition-colors group text-text-muted hover:text-slate-100" href="#">
+<span class="material-symbols-outlined text-[20px]">dns</span>
+<span class="text-sm font-medium">Clusters</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-border-dark transition-colors group text-text-muted hover:text-slate-100" href="#">
+<span class="material-symbols-outlined text-[20px]">rocket_launch</span>
+<span class="text-sm font-medium">Deployments</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-md bg-primary/10 text-primary group border border-primary/20" href="#">
+<span class="material-symbols-outlined text-[20px]">commit</span>
+<span class="text-sm font-medium">Pipelines</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-border-dark transition-colors group text-text-muted hover:text-slate-100 mt-4" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+</nav>
+</div>
+<div class="p-4 border-t border-border-dark">
+<div class="flex items-center gap-3">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-8" data-alt="User Avatar Placeholder" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCIwx2T8tBTQTJg6bQrJI8LhY8rDH5lC8OzzHy8rcqcUdVUgkpujHCIWx1KHuOn0V5OwHWrdzHBBGSpy3a69iRBBDmCAGExteqtRcWuq705X_i4ANP7wgFBYpXMT7Q8Cxm-c_V_J66mSrGEuhbS1LLmmZJ_jHyvR2ErYn9HUG_Ht0TCFy0HP00X3apk5Qbw2N3Fm_GuPiVGOkmR2xPYAsNJn2piBMApTdQ3QDGfkylm1UtHUNpzmiFE6ugmFz2RaOr3Ja1lgOFNexU");'></div>
+<div class="flex flex-col overflow-hidden">
+<span class="text-slate-100 text-sm font-medium truncate">DevOps Lead</span>
+<span class="text-text-muted text-xs truncate">admin@autostack.io</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
+<!-- Topbar -->
+<header class="h-[52px] border-b border-border-dark bg-background-dark/80 backdrop-blur-md sticky top-0 z-10 flex items-center justify-between px-6 shrink-0">
+<div class="flex items-center gap-2 md:hidden">
+<button class="text-text-muted hover:text-slate-100">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<span class="font-display font-bold text-lg">AutoStack</span>
+</div>
+<div class="hidden md:flex flex-1 max-w-md">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[18px]">search</span>
+<input class="w-full bg-border-dark/50 border border-border-dark rounded-md py-1.5 pl-9 pr-4 text-sm text-slate-100 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary placeholder-text-muted transition-all" placeholder="Search pipelines, runs, or branches..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-3 ml-auto">
+<button class="flex items-center justify-center size-8 rounded-md hover:bg-border-dark text-text-muted hover:text-slate-100 transition-colors relative">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+<span class="absolute top-1.5 right-1.5 size-2 bg-primary rounded-full ring-2 ring-background-dark"></span>
+</button>
+<button class="flex items-center gap-2 bg-primary hover:bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors">
+<span class="material-symbols-outlined text-[18px]">add</span>
+<span>New Pipeline</span>
+</button>
+</div>
+</header>
+<!-- Page Content -->
+<div class="p-6 max-w-6xl mx-auto w-full flex flex-col gap-6">
+<!-- Page Header -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+<div>
+<h2 class="text-slate-100 font-display font-bold text-xl">Pipelines</h2>
+<p class="text-text-muted text-sm mt-1 flex items-center gap-2">
+<span>5 pipelines</span>
+<span class="size-1 bg-text-muted rounded-full"></span>
+<span class="text-status-running flex items-center gap-1"><span class="size-1.5 bg-status-running rounded-full animate-pulse"></span> 1 running</span>
+<span class="size-1 bg-text-muted rounded-full"></span>
+<span class="text-status-failed flex items-center gap-1"><span class="size-1.5 bg-status-failed rounded-full"></span> 1 failed</span>
+</p>
+</div>
+<div class="flex items-center gap-2">
+<div class="flex bg-border-dark/50 p-0.5 rounded-md border border-border-dark">
+<button class="px-3 py-1 text-xs font-medium bg-border-dark text-slate-100 rounded shadow-sm">All</button>
+<button class="px-3 py-1 text-xs font-medium text-text-muted hover:text-slate-100 rounded">Mine</button>
+</div>
+<button class="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border-dark hover:bg-border-dark text-slate-100 text-sm font-medium transition-colors">
+<span class="material-symbols-outlined text-[18px]">refresh</span>
+<span>Refresh</span>
+</button>
+</div>
+</div>
+<!-- Pipeline Cards List -->
+<div class="flex flex-col gap-3">
+<!-- Card 1: Success -->
+<div class="bg-card-dark border border-border-dark rounded-lg p-4 hover:border-border-dark/80 transition-colors group cursor-pointer">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+<div class="flex items-start gap-3">
+<div class="mt-1">
+<span class="material-symbols-outlined text-status-success text-[20px]">check_circle</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h3 class="text-slate-100 font-medium text-base">api-gateway</h3>
+<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-border-dark text-text-muted border border-border-dark">run #487</span>
+</div>
+<div class="flex items-center gap-3 mt-1 text-xs text-text-muted">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">call_split</span> main</span>
+<span class="flex items-center gap-1 font-mono">fc82a19</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">schedule</span> 2m 34s</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">history</span> 10m ago</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-1 w-full sm:w-auto mt-2 sm:mt-0">
+<!-- 8 green bars -->
+<div class="h-6 w-8 bg-status-success/20 rounded-sm border border-status-success/30 relative group/tooltip">
+<div class="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover/tooltip:block bg-slate-800 text-white text-[10px] py-0.5 px-2 rounded whitespace-nowrap z-10">Lint</div>
+</div>
+<div class="h-6 w-8 bg-status-success/20 rounded-sm border border-status-success/30 relative group/tooltip">
+<div class="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover/tooltip:block bg-slate-800 text-white text-[10px] py-0.5 px-2 rounded whitespace-nowrap z-10">Build</div>
+</div>
+<div class="h-6 w-8 bg-status-success/20 rounded-sm border border-status-success/30 relative group/tooltip">
+<div class="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover/tooltip:block bg-slate-800 text-white text-[10px] py-0.5 px-2 rounded whitespace-nowrap z-10">Unit Tests</div>
+</div>
+<div class="h-6 w-8 bg-status-success/20 rounded-sm border border-status-success/30 relative group/tooltip">
+<div class="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover/tooltip:block bg-slate-800 text-white text-[10px] py-0.5 px-2 rounded whitespace-nowrap z-10">SonarQube</div>
+</div>
+<div class="h-6 w-8 bg-status-success/20 rounded-sm border border-status-success/30 relative group/tooltip">
+<div class="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover/tooltip:block bg-slate-800 text-white text-[10px] py-0.5 px-2 rounded whitespace-nowrap z-10">Docker Build</div>
+</div>
+<div class="h-6 w-8 bg-status-success/20 rounded-sm border border-status-success/30 relative group/tooltip">
+<div class="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover/tooltip:block bg-slate-800 text-white text-[10px] py-0.5 px-2 rounded whitespace-nowrap z-10">Security Scan</div>
+</div>
+<div class="h-6 w-8 bg-status-success/20 rounded-sm border border-status-success/30 relative group/tooltip">
+<div class="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover/tooltip:block bg-slate-800 text-white text-[10px] py-0.5 px-2 rounded whitespace-nowrap z-10">Deploy Staging</div>
+</div>
+<div class="h-6 w-8 bg-status-success/20 rounded-sm border border-status-success/30 relative group/tooltip">
+<div class="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover/tooltip:block bg-slate-800 text-white text-[10px] py-0.5 px-2 rounded whitespace-nowrap z-10">E2E Tests</div>
+</div>
+<div class="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-text-muted hover:text-slate-100"><span class="material-symbols-outlined text-[18px]">more_vert</span></button>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 2: Running -->
+<div class="bg-card-dark border border-primary/30 rounded-lg p-4 hover:border-primary/50 transition-colors group cursor-pointer relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-primary"></div>
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pl-2">
+<div class="flex items-start gap-3">
+<div class="mt-1 relative">
+<span class="material-symbols-outlined text-status-running text-[20px] animate-pulse">pending</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h3 class="text-slate-100 font-medium text-base">user-service</h3>
+<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-primary/10 text-primary border border-primary/20">run #156</span>
+</div>
+<div class="flex items-center gap-3 mt-1 text-xs text-text-muted">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">call_split</span> feature/auth</span>
+<span class="flex items-center gap-1 font-mono">a9b34f1</span>
+<span class="flex items-center gap-1 text-status-running"><span class="material-symbols-outlined text-[14px]">schedule</span> 1m 12s</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">history</span> just now</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-1 w-full sm:w-auto mt-2 sm:mt-0">
+<!-- 5 green, 1 pulsing blue, 2 gray -->
+<div class="h-6 w-8 bg-status-success/20 rounded-sm border border-status-success/30"></div>
+<div class="h-6 w-8 bg-status-success/20 rounded-sm border border-status-success/30"></div>
+<div class="h-6 w-8 bg-status-success/20 rounded-sm border border-status-success/30"></div>
+<div class="h-6 w-8 bg-status-success/20 rounded-sm border border-status-success/30"></div>
+<div class="h-6 w-8 bg-status-success/20 rounded-sm border border-status-success/30"></div>
+<div class="h-6 w-8 bg-primary/20 rounded-sm border border-primary/50 relative overflow-hidden">
+<div class="absolute inset-0 bg-primary/20 animate-pulse"></div>
+<div class="absolute inset-y-0 left-0 bg-primary/40 w-1/2"></div>
+</div>
+<div class="h-6 w-8 bg-border-dark rounded-sm border border-border-dark/50"></div>
+<div class="h-6 w-8 bg-border-dark rounded-sm border border-border-dark/50"></div>
+<div class="ml-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+<button class="text-text-muted hover:text-status-failed" title="Cancel Run"><span class="material-symbols-outlined text-[18px]">cancel</span></button>
+<button class="text-text-muted hover:text-slate-100"><span class="material-symbols-outlined text-[18px]">more_vert</span></button>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 3: Failed -->
+<div class="bg-card-dark border border-status-failed/30 rounded-lg p-4 hover:border-status-failed/50 transition-colors group cursor-pointer relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-status-failed/80"></div>
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pl-2">
+<div class="flex items-start gap-3">
+<div class="mt-1">
+<span class="material-symbols-outlined text-status-failed text-[20px]">error</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h3 class="text-slate-100 font-medium text-base">worker-queue</h3>
+<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-status-failed/10 text-status-failed border border-status-failed/20">run #89</span>
+</div>
+<div class="flex items-center gap-3 mt-1 text-xs text-text-muted">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">call_split</span> hotfix/memory-leak</span>
+<span class="flex items-center gap-1 font-mono">7d6e42a</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">schedule</span> 0m 47s</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">history</span> 2h ago</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-1 w-full sm:w-auto mt-2 sm:mt-0">
+<!-- 3 green, 1 red, 4 gray -->
+<div class="h-6 w-8 bg-status-success/20 rounded-sm border border-status-success/30"></div>
+<div class="h-6 w-8 bg-status-success/20 rounded-sm border border-status-success/30"></div>
+<div class="h-6 w-8 bg-status-success/20 rounded-sm border border-status-success/30"></div>
+<div class="h-6 w-8 bg-status-failed/20 rounded-sm border border-status-failed/50 relative group/tooltip">
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-status-failed text-[14px]">close</span>
+</div>
+<div class="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover/tooltip:block bg-status-failed text-white text-[10px] py-0.5 px-2 rounded whitespace-nowrap z-10">Unit Tests Failed</div>
+</div>
+<div class="h-6 w-8 bg-border-dark rounded-sm border border-border-dark/50"></div>
+<div class="h-6 w-8 bg-border-dark rounded-sm border border-border-dark/50"></div>
+<div class="h-6 w-8 bg-border-dark rounded-sm border border-border-dark/50"></div>
+<div class="h-6 w-8 bg-border-dark rounded-sm border border-border-dark/50"></div>
+<div class="ml-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+<button class="text-text-muted hover:text-slate-100" title="Re-run"><span class="material-symbols-outlined text-[18px]">replay</span></button>
+<button class="text-text-muted hover:text-slate-100"><span class="material-symbols-outlined text-[18px]">more_vert</span></button>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 4: Success -->
+<div class="bg-card-dark border border-border-dark rounded-lg p-4 hover:border-border-dark/80 transition-colors group cursor-pointer">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+<div class="flex items-start gap-3">
+<div class="mt-1">
+<span class="material-symbols-outlined text-status-success text-[20px]">check_circle</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h3 class="text-slate-100 font-medium text-base">frontend-app</h3>
+<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-border-dark text-text-muted border border-border-dark">run #312</span>
+</div>
+<div class="flex items-center gap-3 mt-1 text-xs text-text-muted">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">call_split</span> develop</span>
+<span class="flex items-center gap-1 font-mono">b5c92f0</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">schedule</span> 3m 08s</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">history</span> 5h ago</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-1 w-full sm:w-auto mt-2 sm:mt-0">
+<!-- 8 green bars -->
+<div class="h-6 w-8 bg-status-success/20 rounded-sm border border-status-success/30"></div>
+<div class="h-6 w-8 bg-status-success/20 rounded-sm border border-status-success/30"></div>
+<div class="h-6 w-8 bg-status-success/20 rounded-sm border border-status-success/30"></div>
+<div class="h-6 w-8 bg-status-success/20 rounded-sm border border-status-success/30"></div>
+<div class="h-6 w-8 bg-status-success/20 rounded-sm border border-status-success/30"></div>
+<div class="h-6 w-8 bg-status-success/20 rounded-sm border border-status-success/30"></div>
+<div class="h-6 w-8 bg-status-success/20 rounded-sm border border-status-success/30"></div>
+<div class="h-6 w-8 bg-status-success/20 rounded-sm border border-status-success/30"></div>
+<div class="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-text-muted hover:text-slate-100"><span class="material-symbols-outlined text-[18px]">more_vert</span></button>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 5: Queued -->
+<div class="bg-card-dark border border-border-dark rounded-lg p-4 hover:border-border-dark/80 transition-colors group cursor-pointer">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+<div class="flex items-start gap-3">
+<div class="mt-1">
+<span class="material-symbols-outlined text-text-muted text-[20px]">horizontal_rule</span>
+</div>
+<div>
+<div class="flex items-center gap-2">
+<h3 class="text-slate-100 font-medium text-base text-opacity-70">ml-inference</h3>
+<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-border-dark text-text-muted border border-border-dark">run #24</span>
+<span class="px-2 py-0.5 rounded text-[10px] bg-border-dark text-text-muted">Queued</span>
+</div>
+<div class="flex items-center gap-3 mt-1 text-xs text-text-muted text-opacity-70">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">call_split</span> test/model-v2</span>
+<span class="flex items-center gap-1 font-mono">1e8a9bc</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">schedule</span> --</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">history</span> 1d ago</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-1 w-full sm:w-auto mt-2 sm:mt-0 opacity-50">
+<!-- 8 gray bars -->
+<div class="h-6 w-8 bg-border-dark rounded-sm border border-border-dark/50"></div>
+<div class="h-6 w-8 bg-border-dark rounded-sm border border-border-dark/50"></div>
+<div class="h-6 w-8 bg-border-dark rounded-sm border border-border-dark/50"></div>
+<div class="h-6 w-8 bg-border-dark rounded-sm border border-border-dark/50"></div>
+<div class="h-6 w-8 bg-border-dark rounded-sm border border-border-dark/50"></div>
+<div class="h-6 w-8 bg-border-dark rounded-sm border border-border-dark/50"></div>
+<div class="h-6 w-8 bg-border-dark rounded-sm border border-border-dark/50"></div>
+<div class="h-6 w-8 bg-border-dark rounded-sm border border-border-dark/50"></div>
+<div class="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-text-muted hover:text-slate-100"><span class="material-symbols-outlined text-[18px]">more_vert</span></button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Load More / Pagination placeholder -->
+<div class="flex justify-center mt-4">
+<button class="px-4 py-2 text-sm font-medium text-text-muted hover:text-slate-100 border border-border-dark rounded-md hover:bg-border-dark transition-colors">
+                    Load Older Runs
+                </button>
+</div>
+</div>
+</main>
+</body></html>

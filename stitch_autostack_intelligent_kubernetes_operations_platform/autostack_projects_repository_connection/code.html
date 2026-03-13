@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AutoStack Projects</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400..800&amp;family=DM+Sans:opsz,wght@9..40,400..700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2463eb",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#07090E",
+                        "panel": "#0C0F17",
+                        "border-subtle": "#1C212B",
+                        "text-main": "#E2E8F0",
+                        "text-muted": "#94A3B8",
+                        "status-success": "#10B981",
+                        "status-warning": "#F59E0B",
+                        "status-info": "#3B82F6"
+                    },
+                    fontFamily: {
+                        "display": ["Syne", "sans-serif"],
+                        "body": ["DM Sans", "sans-serif"],
+                        "mono": ["JetBrains Mono", "monospace"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .filled-icon {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-text-main font-body antialiased min-h-screen flex overflow-hidden">
+<!-- Sidebar -->
+<aside class="w-[220px] flex-shrink-0 border-r border-border-subtle bg-background-dark flex flex-col h-screen z-10 relative">
+<div class="h-[52px] flex items-center px-4 border-b border-border-subtle">
+<div class="flex items-center gap-2 text-text-main">
+<svg class="size-5 text-primary" fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M44 11.2727C44 14.0109 39.8386 16.3957 33.69 17.6364C39.8386 18.877 44 21.2618 44 24C44 26.7382 39.8386 29.123 33.69 30.3636C39.8386 31.6043 44 33.9891 44 36.7273C44 40.7439 35.0457 44 24 44C12.9543 44 4 40.7439 4 36.7273C4 33.9891 8.16144 31.6043 14.31 30.3636C8.16144 29.123 4 26.7382 4 24C4 21.2618 8.16144 18.877 14.31 17.6364C8.16144 16.3957 4 14.0109 4 11.2727C4 7.25611 12.9543 4 24 4C35.0457 4 44 7.25611 44 11.2727Z" fill="currentColor"></path>
+</svg>
+<span class="font-display font-bold text-sm tracking-tight">AutoStack</span>
+</div>
+</div>
+<div class="p-3 flex-1 overflow-y-auto">
+<div class="mb-4 px-2">
+<p class="text-[11px] font-medium text-text-muted uppercase tracking-wider mb-2">Workspace</p>
+<div class="flex flex-col gap-0.5">
+<a class="flex items-center gap-3 px-2 py-1.5 rounded-md text-text-muted hover:bg-border-subtle/50 hover:text-text-main transition-colors group" href="#">
+<span class="material-symbols-outlined text-[18px] group-hover:text-text-main transition-colors">grid_view</span>
+<span class="text-sm font-medium">Overview</span>
+</a>
+<a class="flex items-center gap-3 px-2 py-1.5 rounded-md bg-primary/10 text-primary transition-colors" href="#">
+<span class="material-symbols-outlined filled-icon text-[18px]">folder</span>
+<span class="text-sm font-medium">Projects</span>
+</a>
+<a class="flex items-center gap-3 px-2 py-1.5 rounded-md text-text-muted hover:bg-border-subtle/50 hover:text-text-main transition-colors group" href="#">
+<span class="material-symbols-outlined text-[18px] group-hover:text-text-main transition-colors">database</span>
+<span class="text-sm font-medium">Clusters</span>
+</a>
+<a class="flex items-center gap-3 px-2 py-1.5 rounded-md text-text-muted hover:bg-border-subtle/50 hover:text-text-main transition-colors group" href="#">
+<span class="material-symbols-outlined text-[18px] group-hover:text-text-main transition-colors">rocket_launch</span>
+<span class="text-sm font-medium">Deployments</span>
+</a>
+</div>
+</div>
+</div>
+<div class="p-3 border-t border-border-subtle">
+<a class="flex items-center gap-3 px-2 py-1.5 rounded-md text-text-muted hover:bg-border-subtle/50 hover:text-text-main transition-colors group" href="#">
+<span class="material-symbols-outlined text-[18px]">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+<div class="mt-2 flex items-center gap-3 px-2 py-2">
+<img alt="User Avatar" class="w-6 h-6 rounded-full object-cover ring-1 ring-border-subtle" data-alt="User Avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC7TCn4YfOC0pVrhSy_tieQIJA5PhRfW9SXgrcwDjZX-7KBeEdlJ9eZ14SRJFs7QVWVM2w41m78U5NvH49agRW0KcYMxxGK9eh-Sgzql5E1C4oMgkwDeV49u6Ir7jmCTzGCLzuvd64wGyKrNvUNsjRTEWeKIUF3MzaxUwMBWd3oDkIliaqf2BUli9cxl0NOlhVarAC5zVVBnE7RcgnPQjxGYEHjdjRl14eGE5vATlPx9biFkq4qC1WvkFctLItzn5r9yjqGJVCuvEw"/>
+<div class="flex flex-col">
+<span class="text-xs font-medium text-text-main leading-tight">Alice Chen</span>
+<span class="text-[10px] text-text-muted leading-tight">Admin</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col h-screen overflow-hidden relative">
+<!-- Top Bar -->
+<header class="h-[52px] flex-shrink-0 border-b border-border-subtle bg-background-dark/95 backdrop-blur-sm flex items-center justify-between px-6 z-10">
+<div class="flex items-center gap-4 flex-1">
+<div class="relative w-64">
+<span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-text-muted text-[16px]">search</span>
+<input class="w-full bg-panel border border-border-subtle rounded-md pl-8 pr-3 py-1.5 text-sm text-text-main placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-shadow" placeholder="Search projects..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<button class="text-text-muted hover:text-text-main transition-colors">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+</button>
+<div class="h-4 w-px bg-border-subtle mx-1"></div>
+<button class="text-text-muted hover:text-text-main transition-colors flex items-center gap-1.5 text-sm font-medium">
+<span class="material-symbols-outlined text-[18px]">help</span>
+                    Support
+                </button>
+</div>
+</header>
+<!-- Page Content -->
+<div class="flex-1 overflow-y-auto p-6 lg:p-8">
+<div class="max-w-[1200px] mx-auto w-full flex flex-col gap-6">
+<!-- Page Header -->
+<div class="flex items-center justify-between">
+<div>
+<h1 class="font-display font-bold text-[20px] text-text-main leading-tight">Projects</h1>
+<p class="text-sm text-text-muted mt-1">8 repositories connected</p>
+</div>
+<button class="bg-primary hover:bg-primary/90 text-white text-sm font-medium px-4 py-2 rounded-md shadow-sm transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                        New project
+                    </button>
+</div>
+<!-- Projects Table Card -->
+<div class="bg-panel border border-border-subtle rounded-lg overflow-hidden flex flex-col">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-border-subtle bg-background-dark/50 text-[11px] uppercase tracking-wider text-text-muted font-medium">
+<th class="px-5 py-3 w-[25%]">Project</th>
+<th class="px-5 py-3 w-[15%]">Stack</th>
+<th class="px-5 py-3 w-[15%]">Environment</th>
+<th class="px-5 py-3 w-[20%]">Health Score</th>
+<th class="px-5 py-3 w-[10%]">Deploys</th>
+<th class="px-5 py-3 w-[15%]">Status</th>
+<th class="px-5 py-3 w-[40px]"></th>
+</tr>
+</thead>
+<tbody class="text-sm">
+<tr class="border-b border-border-subtle/50 hover:bg-background-dark/30 transition-colors group">
+<td class="px-5 py-3">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-background-dark border border-border-subtle flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[16px] text-text-muted">api</span>
+</div>
+<div>
+<span class="font-medium text-text-main block">api-gateway</span>
+<span class="text-xs text-text-muted font-mono block mt-0.5">main</span>
+</div>
+</div>
+</td>
+<td class="px-5 py-3">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-background-dark border border-border-subtle text-text-main">Go</span>
+</td>
+<td class="px-5 py-3">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-background-dark border border-border-subtle text-text-main">prod</span>
+</td>
+<td class="px-5 py-3">
+<div class="flex items-center gap-2">
+<span class="font-mono text-xs w-6">98</span>
+<div class="w-[60px] h-1.5 bg-background-dark rounded-full overflow-hidden border border-border-subtle/50">
+<div class="h-full bg-status-success rounded-full" style="width: 98%"></div>
+</div>
+</div>
+</td>
+<td class="px-5 py-3 font-mono text-xs text-text-muted">142</td>
+<td class="px-5 py-3">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-status-success shadow-[0_0_8px_rgba(16,185,129,0.4)]"></div>
+<span class="text-xs font-medium text-text-main">Running</span>
+</div>
+</td>
+<td class="px-5 py-3 text-right">
+<button class="text-text-muted hover:text-text-main opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="border-b border-border-subtle/50 hover:bg-background-dark/30 transition-colors group">
+<td class="px-5 py-3">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-background-dark border border-border-subtle flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[16px] text-text-muted">person</span>
+</div>
+<div>
+<span class="font-medium text-text-main block">user-service</span>
+<span class="text-xs text-text-muted font-mono block mt-0.5">main</span>
+</div>
+</div>
+</td>
+<td class="px-5 py-3">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-background-dark border border-border-subtle text-text-main">Node.js</span>
+</td>
+<td class="px-5 py-3">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-background-dark border border-border-subtle text-text-main">prod</span>
+</td>
+<td class="px-5 py-3">
+<div class="flex items-center gap-2">
+<span class="font-mono text-xs w-6 text-status-warning">85</span>
+<div class="w-[60px] h-1.5 bg-background-dark rounded-full overflow-hidden border border-border-subtle/50">
+<div class="h-full bg-status-warning rounded-full" style="width: 85%"></div>
+</div>
+</div>
+</td>
+<td class="px-5 py-3 font-mono text-xs text-text-muted">89</td>
+<td class="px-5 py-3">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-status-warning shadow-[0_0_8px_rgba(245,158,11,0.4)]"></div>
+<span class="text-xs font-medium text-text-main">Degraded</span>
+</div>
+</td>
+<td class="px-5 py-3 text-right">
+<button class="text-text-muted hover:text-text-main opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="border-b border-border-subtle/50 hover:bg-background-dark/30 transition-colors group">
+<td class="px-5 py-3">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-background-dark border border-border-subtle flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[16px] text-text-muted">queue</span>
+</div>
+<div>
+<span class="font-medium text-text-main block">worker-queue</span>
+<span class="text-xs text-text-muted font-mono block mt-0.5">develop</span>
+</div>
+</div>
+</td>
+<td class="px-5 py-3">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-background-dark border border-border-subtle text-text-main">Python</span>
+</td>
+<td class="px-5 py-3">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-background-dark border border-border-subtle text-text-main">staging</span>
+</td>
+<td class="px-5 py-3">
+<div class="flex items-center gap-2">
+<span class="font-mono text-xs w-6">100</span>
+<div class="w-[60px] h-1.5 bg-background-dark rounded-full overflow-hidden border border-border-subtle/50">
+<div class="h-full bg-status-success rounded-full" style="width: 100%"></div>
+</div>
+</div>
+</td>
+<td class="px-5 py-3 font-mono text-xs text-text-muted">24</td>
+<td class="px-5 py-3">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-status-success shadow-[0_0_8px_rgba(16,185,129,0.4)]"></div>
+<span class="text-xs font-medium text-text-main">Running</span>
+</div>
+</td>
+<td class="px-5 py-3 text-right">
+<button class="text-text-muted hover:text-text-main opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-background-dark/30 transition-colors group">
+<td class="px-5 py-3">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-background-dark border border-border-subtle flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[16px] text-text-muted">web</span>
+</div>
+<div>
+<span class="font-medium text-text-main block">frontend-app</span>
+<span class="text-xs text-text-muted font-mono block mt-0.5">main</span>
+</div>
+</div>
+</td>
+<td class="px-5 py-3">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-background-dark border border-border-subtle text-text-main">React</span>
+</td>
+<td class="px-5 py-3">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-background-dark border border-border-subtle text-text-main">prod</span>
+</td>
+<td class="px-5 py-3">
+<div class="flex items-center gap-2">
+<span class="font-mono text-xs w-6">92</span>
+<div class="w-[60px] h-1.5 bg-background-dark rounded-full overflow-hidden border border-border-subtle/50">
+<div class="h-full bg-status-info rounded-full" style="width: 92%"></div>
+</div>
+</div>
+</td>
+<td class="px-5 py-3 font-mono text-xs text-text-muted">156</td>
+<td class="px-5 py-3">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-status-info shadow-[0_0_8px_rgba(59,130,246,0.4)] animate-pulse"></div>
+<span class="text-xs font-medium text-text-main">Deploying</span>
+</div>
+</td>
+<td class="px-5 py-3 text-right">
+<button class="text-text-muted hover:text-text-main opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Modal Overlay Backdrop (Hidden by default, showing for context) -->
+<div class="fixed inset-0 bg-background-dark/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+<!-- Modal Content -->
+<div class="bg-panel border border-border-subtle rounded-xl shadow-2xl w-full max-w-[520px] overflow-hidden flex flex-col relative">
+<!-- Modal Header -->
+<div class="flex items-center justify-between px-6 py-4 border-b border-border-subtle">
+<h2 class="font-display font-bold text-lg text-text-main">Connect repository</h2>
+<button class="text-text-muted hover:text-text-main transition-colors">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<!-- Modal Body -->
+<div class="p-6 flex flex-col gap-5">
+<!-- URL Input -->
+<div class="flex flex-col gap-1.5">
+<label class="text-sm font-medium text-text-main">Repository URL</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[18px]">link</span>
+<input class="w-full bg-background-dark border border-border-subtle rounded-md pl-9 pr-3 py-2 text-sm text-text-main placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary font-mono transition-shadow" placeholder="https://github.com/org/repo" type="text"/>
+</div>
+</div>
+<!-- Branch & Env Row -->
+<div class="flex gap-4">
+<div class="flex flex-col gap-1.5 flex-1">
+<label class="text-sm font-medium text-text-main">Branch</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[18px]">call_split</span>
+<input class="w-full bg-background-dark border border-border-subtle rounded-md pl-9 pr-3 py-2 text-sm text-text-main placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary font-mono transition-shadow" type="text" value="main"/>
+</div>
+</div>
+<div class="flex flex-col gap-1.5 flex-1">
+<label class="text-sm font-medium text-text-main">Environment</label>
+<select class="w-full bg-background-dark border border-border-subtle rounded-md px-3 py-2 text-sm text-text-main focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary appearance-none transition-shadow">
+<option>Production</option>
+<option>Staging</option>
+<option>Development</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-[34px] pointer-events-none text-text-muted text-[18px]">expand_more</span>
+</div>
+</div>
+<!-- Region -->
+<div class="flex flex-col gap-1.5">
+<label class="text-sm font-medium text-text-main">AWS Region</label>
+<select class="w-full bg-background-dark border border-border-subtle rounded-md px-3 py-2 text-sm text-text-main focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary appearance-none transition-shadow">
+<option>us-east-1 (N. Virginia)</option>
+<option>us-west-2 (Oregon)</option>
+<option>eu-west-1 (Ireland)</option>
+</select>
+<span class="material-symbols-outlined absolute right-[28px] top-[198px] pointer-events-none text-text-muted text-[18px] opacity-0">expand_more</span>
+</div>
+<!-- Info Box -->
+<div class="mt-2 bg-primary/5 border border-primary/20 rounded-lg p-4 flex flex-col gap-3">
+<p class="text-sm text-text-main font-medium flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-primary">auto_awesome</span>
+                        AutoStack will generate:
+                    </p>
+<div class="flex flex-wrap gap-2">
+<span class="inline-flex items-center px-2 py-1 rounded text-[11px] font-mono bg-background-dark border border-border-subtle text-text-muted">Dockerfile</span>
+<span class="inline-flex items-center px-2 py-1 rounded text-[11px] font-mono bg-background-dark border border-border-subtle text-text-muted">K8s Manifests</span>
+<span class="inline-flex items-center px-2 py-1 rounded text-[11px] font-mono bg-background-dark border border-border-subtle text-text-muted">HPA</span>
+<span class="inline-flex items-center px-2 py-1 rounded text-[11px] font-mono bg-background-dark border border-border-subtle text-text-muted">ArgoCD App</span>
+</div>
+</div>
+</div>
+<!-- Modal Footer -->
+<div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-border-subtle bg-background-dark/50">
+<button class="px-4 py-2 text-sm font-medium text-text-main hover:bg-border-subtle/50 rounded-md transition-colors">Cancel</button>
+<button class="px-4 py-2 text-sm font-medium bg-primary hover:bg-primary/90 text-white rounded-md shadow-sm transition-colors flex items-center gap-2">
+                    Connect
+                    <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</body></html>

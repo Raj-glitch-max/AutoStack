@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AutoStack Landing Page</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2463eb",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#111621",
+                        "surface": "#1a2233",
+                        "border": "#334366",
+                        "text-muted": "#92a4c8"
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "mono": ["ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "Liberation Mono", "Courier New", "monospace"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen">
+<div class="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden">
+<div class="layout-container flex h-full grow flex-col">
+<header class="sticky top-0 z-50 flex items-center justify-between whitespace-nowrap border-b border-solid border-border bg-background-dark/80 backdrop-blur-md px-10 py-4">
+<div class="flex items-center gap-4">
+<div class="text-primary material-symbols-outlined text-2xl">layers</div>
+<h2 class="text-xl font-bold leading-tight tracking-[-0.015em]">AutoStack</h2>
+</div>
+<div class="flex flex-1 justify-end gap-8">
+<div class="hidden md:flex items-center gap-9">
+<a class="text-slate-300 hover:text-white text-sm font-medium transition-colors" href="#features">Features</a>
+<a class="text-slate-300 hover:text-white text-sm font-medium transition-colors" href="#how-it-works">How it Works</a>
+<a class="text-slate-300 hover:text-white text-sm font-medium transition-colors" href="#pricing">Pricing</a>
+</div>
+<button class="flex min-w-[84px] cursor-pointer items-center justify-center rounded-lg h-10 px-4 bg-primary hover:bg-primary/90 text-white text-sm font-bold transition-colors">
+<span>Get Started</span>
+</button>
+</div>
+</header>
+<main class="flex-1 flex flex-col items-center w-full px-4 md:px-10 py-10">
+<div class="w-full max-w-[960px] flex flex-col items-center">
+<section class="w-full py-16 md:py-24 flex flex-col items-center text-center gap-6 relative">
+<div class="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/20 via-background-dark to-background-dark"></div>
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/30 bg-primary/10 text-primary text-sm font-medium mb-4">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+</span>
+                            AutoStack Beta is live
+                        </div>
+<h1 class="text-4xl md:text-6xl font-black leading-tight tracking-tighter max-w-[800px]">
+                            Deploy to Kubernetes.<br/>In 60 seconds.
+                        </h1>
+<h2 class="text-lg md:text-xl text-text-muted font-normal leading-relaxed max-w-[600px]">
+                            Intelligent Kubernetes Operations Platform. Skip the YAML, focus on your code. We handle the rest.
+                        </h2>
+<div class="flex flex-col sm:flex-row gap-4 mt-6">
+<button class="flex h-12 px-8 cursor-pointer items-center justify-center rounded-lg bg-primary hover:bg-primary/90 text-white text-base font-bold transition-colors">
+                                Join Beta
+                            </button>
+<button class="flex h-12 px-8 cursor-pointer items-center justify-center rounded-lg bg-surface border border-border hover:bg-border/50 text-white text-base font-bold transition-colors">
+                                View Documentation
+                            </button>
+</div>
+</section>
+<section class="w-full max-w-[800px] mb-24 rounded-xl border border-border bg-[#0d1117] overflow-hidden shadow-2xl">
+<div class="flex items-center px-4 py-3 border-b border-border bg-[#161b22]">
+<div class="flex gap-2">
+<div class="w-3 h-3 rounded-full bg-red-500/80"></div>
+<div class="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+<div class="w-3 h-3 rounded-full bg-green-500/80"></div>
+</div>
+<div class="mx-auto text-xs text-text-muted font-mono">bash - autostack deploy</div>
+</div>
+<div class="p-6 font-mono text-sm leading-relaxed text-slate-300">
+<div class="flex gap-2 text-green-400 mb-2"><span>$</span><span>autostack init my-cluster</span></div>
+<div class="text-text-muted mb-4">Initializing AutoStack environment... Done.</div>
+<div class="flex gap-2 text-green-400 mb-2"><span>$</span><span>autostack deploy .</span></div>
+<div class="mb-1 text-blue-400">Analyzing repository...</div>
+<div class="mb-1">Detected Node.js application (Express)</div>
+<div class="mb-1">Generating Dockerfile...</div>
+<div class="mb-1">Building image <span class="text-yellow-400">registry.autostack.io/app:v1.0.4</span>...</div>
+<div class="mb-1">Pushing image...</div>
+<div class="mb-1 text-blue-400">Applying Kubernetes manifests...</div>
+<div class="mb-1">✓ deployment.apps/api-server created</div>
+<div class="mb-1">✓ service/api-service created</div>
+<div class="mb-4">✓ ingress.networking.k8s.io/api-ingress configured</div>
+<div class="text-green-400 font-bold">Deploy successful! 🚀</div>
+<div class="text-text-muted">Live URL: https://api.myapp.com</div>
+<div class="flex gap-2 text-green-400 mt-4"><span class="animate-pulse">_</span></div>
+</div>
+</section>
+<section class="w-full py-16 flex flex-col gap-10" id="features">
+<div class="flex flex-col gap-4 items-center text-center">
+<h2 class="text-3xl md:text-4xl font-bold tracking-tight">Powerful Kubernetes Operations</h2>
+<p class="text-lg text-text-muted max-w-[720px]">Everything you need to deploy and manage workloads effortlessly.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<div class="flex flex-col gap-4 rounded-xl border border-border bg-surface p-6 hover:border-primary/50 transition-colors">
+<div class="w-12 h-12 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500 material-symbols-outlined">trending_up</div>
+<div>
+<h3 class="text-lg font-bold mb-2">Automated Scaling</h3>
+<p class="text-text-muted text-sm leading-relaxed">Scale deployments up or down based on real-time traffic and resource utilization metrics.</p>
+</div>
+</div>
+<div class="flex flex-col gap-4 rounded-xl border border-border bg-surface p-6 hover:border-primary/50 transition-colors">
+<div class="w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500 material-symbols-outlined">monitoring</div>
+<div>
+<h3 class="text-lg font-bold mb-2">Deep Observability</h3>
+<p class="text-text-muted text-sm leading-relaxed">Instant access to real-time metrics, distributed tracing, and aggregated logs out of the box.</p>
+</div>
+</div>
+<div class="flex flex-col gap-4 rounded-xl border border-border bg-surface p-6 hover:border-primary/50 transition-colors">
+<div class="w-12 h-12 rounded-lg bg-green-500/10 flex items-center justify-center text-green-500 material-symbols-outlined">check_circle</div>
+<div>
+<h3 class="text-lg font-bold mb-2">Zero Downtime</h3>
+<p class="text-text-muted text-sm leading-relaxed">Automated rolling updates and canary deployments ensure your services never go offline.</p>
+</div>
+</div>
+<div class="flex flex-col gap-4 rounded-xl border border-border bg-surface p-6 hover:border-primary/50 transition-colors">
+<div class="w-12 h-12 rounded-lg bg-red-500/10 flex items-center justify-center text-red-500 material-symbols-outlined">security</div>
+<div>
+<h3 class="text-lg font-bold mb-2">RBAC Enforcement</h3>
+<p class="text-text-muted text-sm leading-relaxed">Granular access control policies managed through an intuitive UI rather than complex YAML.</p>
+</div>
+</div>
+<div class="flex flex-col gap-4 rounded-xl border border-border bg-surface p-6 hover:border-primary/50 transition-colors">
+<div class="w-12 h-12 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-500 material-symbols-outlined">vpn_key</div>
+<div>
+<h3 class="text-lg font-bold mb-2">Secret Management</h3>
+<p class="text-text-muted text-sm leading-relaxed">Securely store, rotate, and inject secrets directly into your pods with native KMS integration.</p>
+</div>
+</div>
+<div class="flex flex-col gap-4 rounded-xl border border-border bg-surface p-6 hover:border-primary/50 transition-colors">
+<div class="w-12 h-12 rounded-lg bg-cyan-500/10 flex items-center justify-center text-cyan-500 material-symbols-outlined">cloud</div>
+<div>
+<h3 class="text-lg font-bold mb-2">Multi-Cloud Ready</h3>
+<p class="text-text-muted text-sm leading-relaxed">Deploy consistently across AWS EKS, GCP GKE, Azure AKS, or on-premise clusters.</p>
+</div>
+</div>
+</div>
+</section>
+<section class="w-full py-16 flex flex-col gap-10" id="how-it-works">
+<div class="flex flex-col gap-4 items-center text-center">
+<h2 class="text-3xl md:text-4xl font-bold tracking-tight">How it works</h2>
+<p class="text-lg text-text-muted max-w-[720px]">A streamlined architecture designed for developer velocity.</p>
+</div>
+<div class="w-full aspect-[21/9] bg-surface border border-border rounded-xl flex items-center justify-center p-8 bg-[url('https://placeholder.pics/svg/800x400/1a2233-1a2233/334366')] bg-cover bg-center" data-alt="Abstract diagram showing CI/CD pipeline flowing into Kubernetes cluster">
+<!-- Diagram placeholder -->
+<div class="text-text-muted font-medium flex flex-col items-center gap-4">
+<span class="material-symbols-outlined text-4xl">account_tree</span>
+<span>Architecture Diagram</span>
+</div>
+</div>
+</section>
+<section class="w-full py-16 flex flex-col gap-10" id="pricing">
+<div class="flex flex-col gap-4 items-center text-center">
+<h2 class="text-3xl md:text-4xl font-bold tracking-tight">Simple, transparent pricing</h2>
+<p class="text-lg text-text-muted max-w-[720px]">Start for free, upgrade when you need more power.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-[900px] mx-auto">
+<!-- Free Tier -->
+<div class="flex flex-col p-6 rounded-xl border border-border bg-surface">
+<h3 class="text-xl font-bold mb-2">Hobby</h3>
+<div class="text-3xl font-black mb-1">$0<span class="text-base text-text-muted font-normal">/mo</span></div>
+<p class="text-sm text-text-muted mb-6">Perfect for side projects and learning.</p>
+<ul class="flex flex-col gap-3 mb-8 flex-1">
+<li class="flex items-center gap-2 text-sm"><span class="material-symbols-outlined text-sm text-primary">check</span> 1 Cluster</li>
+<li class="flex items-center gap-2 text-sm"><span class="material-symbols-outlined text-sm text-primary">check</span> 5 Deployments</li>
+<li class="flex items-center gap-2 text-sm"><span class="material-symbols-outlined text-sm text-primary">check</span> Community Support</li>
+</ul>
+<button class="w-full py-2 rounded-lg border border-border hover:bg-border/50 font-medium transition-colors">Start Free</button>
+</div>
+<!-- Pro Tier -->
+<div class="flex flex-col p-6 rounded-xl border-2 border-primary bg-surface relative">
+<div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full">MOST POPULAR</div>
+<h3 class="text-xl font-bold mb-2">Pro</h3>
+<div class="text-3xl font-black mb-1">$49<span class="text-base text-text-muted font-normal">/mo</span></div>
+<p class="text-sm text-text-muted mb-6">For professional developers and small teams.</p>
+<ul class="flex flex-col gap-3 mb-8 flex-1">
+<li class="flex items-center gap-2 text-sm"><span class="material-symbols-outlined text-sm text-primary">check</span> 5 Clusters</li>
+<li class="flex items-center gap-2 text-sm"><span class="material-symbols-outlined text-sm text-primary">check</span> Unlimited Deployments</li>
+<li class="flex items-center gap-2 text-sm"><span class="material-symbols-outlined text-sm text-primary">check</span> Advanced Observability</li>
+<li class="flex items-center gap-2 text-sm"><span class="material-symbols-outlined text-sm text-primary">check</span> Email Support</li>
+</ul>
+<button class="w-full py-2 rounded-lg bg-primary hover:bg-primary/90 text-white font-medium transition-colors">Get Pro</button>
+</div>
+<!-- Team Tier -->
+<div class="flex flex-col p-6 rounded-xl border border-border bg-surface">
+<h3 class="text-xl font-bold mb-2">Team</h3>
+<div class="text-3xl font-black mb-1">$199<span class="text-base text-text-muted font-normal">/mo</span></div>
+<p class="text-sm text-text-muted mb-6">For scaling organizations needing control.</p>
+<ul class="flex flex-col gap-3 mb-8 flex-1">
+<li class="flex items-center gap-2 text-sm"><span class="material-symbols-outlined text-sm text-primary">check</span> Unlimited Clusters</li>
+<li class="flex items-center gap-2 text-sm"><span class="material-symbols-outlined text-sm text-primary">check</span> Unlimited Deployments</li>
+<li class="flex items-center gap-2 text-sm"><span class="material-symbols-outlined text-sm text-primary">check</span> SSO &amp; Advanced RBAC</li>
+<li class="flex items-center gap-2 text-sm"><span class="material-symbols-outlined text-sm text-primary">check</span> 24/7 Priority Support</li>
+</ul>
+<button class="w-full py-2 rounded-lg border border-border hover:bg-border/50 font-medium transition-colors">Contact Sales</button>
+</div>
+</div>
+</section>
+</div>
+</main>
+<footer class="w-full border-t border-border bg-background-dark py-10 px-10">
+<div class="max-w-[960px] mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+<div class="flex items-center gap-2">
+<div class="text-primary material-symbols-outlined">layers</div>
+<span class="font-bold">AutoStack</span>
+</div>
+<div class="flex gap-6 text-sm text-text-muted">
+<a class="hover:text-white transition-colors" href="#">Twitter</a>
+<a class="hover:text-white transition-colors" href="#">GitHub</a>
+<a class="hover:text-white transition-colors" href="#">Discord</a>
+</div>
+<div class="text-sm text-text-muted">
+                        © 2024 AutoStack Inc. All rights reserved.
+                    </div>
+</div>
+</footer>
+</div>
+</div>
+</body></html>

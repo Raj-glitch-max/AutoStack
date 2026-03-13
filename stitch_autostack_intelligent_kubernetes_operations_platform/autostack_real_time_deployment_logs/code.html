@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AutoStack Real-time Deployment Logs</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#2463eb",
+              "background-light": "#f6f6f8",
+              "background-dark": "#07090E",
+              "sidebar-dark": "#07090E",
+              "nav-active": "#111520",
+              "card-bg": "#0C0F17",
+              "card-header": "#111520",
+              "filter-bg": "#161B27",
+              "border-dark": "#242f47",
+              "text-muted": "#92a4c8",
+              "log-time": "#4A5168",
+              "log-info": "#3b82f6",
+              "log-success": "#22c55e",
+              "log-warn": "#f59e0b",
+              "log-tag": "#a855f7"
+            },
+            fontFamily: {
+              "display": ["Inter", "sans-serif"],
+              "mono": ["JetBrains Mono", "monospace"]
+            },
+            borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .blinking-cursor {
+            animation: blink 1s step-end infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        .pulse-dot {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 4px rgba(34, 197, 94, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+        
+        /* Custom scrollbar for terminal */
+        .terminal-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+        .terminal-scroll::-webkit-scrollbar-track {
+            background: #0C0F17; 
+        }
+        .terminal-scroll::-webkit-scrollbar-thumb {
+            background: #242f47; 
+            border-radius: 4px;
+        }
+        .terminal-scroll::-webkit-scrollbar-thumb:hover {
+            background: #4A5168; 
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display min-h-screen flex overflow-hidden">
+<!-- Sidebar -->
+<aside class="w-[220px] bg-sidebar-dark border-r border-border-dark flex-shrink-0 flex flex-col justify-between p-4 h-screen hidden md:flex">
+<div class="flex flex-col gap-6">
+<div class="flex flex-col">
+<h1 class="text-slate-100 text-base font-semibold leading-normal">AutoStack</h1>
+<p class="text-text-muted text-xs font-medium leading-normal">Prod Environment</p>
+</div>
+<nav class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-nav-active transition-colors text-slate-300 hover:text-slate-100 group" href="#">
+<span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-slate-200">dashboard</span>
+<span class="text-sm font-medium">Overview</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-nav-active transition-colors text-slate-300 hover:text-slate-100 group" href="#">
+<span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-slate-200">dns</span>
+<span class="text-sm font-medium">Clusters</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-nav-active transition-colors text-slate-300 hover:text-slate-100 group" href="#">
+<span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-slate-200">rocket_launch</span>
+<span class="text-sm font-medium">Deployments</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/20 text-primary relative" href="#">
+<div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-4 bg-primary rounded-r-full"></div>
+<span class="material-symbols-outlined text-[20px]">terminal</span>
+<span class="text-sm font-medium">Logs</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-nav-active transition-colors text-slate-300 hover:text-slate-100 group" href="#">
+<span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-slate-200">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+</nav>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 mt-auto">
+<div class="w-8 h-8 rounded-full bg-border-dark flex items-center justify-center text-slate-300">
+<span class="material-symbols-outlined text-[18px]">person</span>
+</div>
+<div class="flex flex-col">
+<span class="text-xs font-medium text-slate-200">DevOps Admin</span>
+<span class="text-[10px] text-text-muted">admin@autostack.io</span>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col h-screen overflow-hidden bg-background-dark">
+<!-- Top Bar -->
+<header class="h-[52px] flex items-center justify-between border-b border-border-dark px-6 flex-shrink-0 bg-background-dark sticky top-0 z-10">
+<div class="flex items-center gap-4">
+<button class="md:hidden text-slate-400 hover:text-slate-200">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<div class="flex items-center gap-2 text-sm text-text-muted font-medium">
+<span>Deployments</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+<span class="text-slate-200">prod-eks-us-east-1</span>
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+<span class="text-slate-200">Logs</span>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-slate-400">search</span>
+<input class="w-64 bg-nav-active border border-border-dark rounded-md py-1.5 pl-9 pr-3 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all" placeholder="Search logs..." type="text"/>
+</div>
+<button class="w-8 h-8 flex items-center justify-center rounded-md hover:bg-nav-active text-slate-400 hover:text-slate-200 transition-colors">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+</button>
+</div>
+</header>
+<!-- Content Area -->
+<div class="flex-1 flex flex-col p-6 gap-4 overflow-hidden">
+<!-- Header & Actions -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 flex-shrink-0">
+<div class="flex flex-col gap-1">
+<h2 class="text-slate-100 text-xl font-semibold tracking-tight">Deployment Logs</h2>
+<p class="text-text-muted text-sm font-medium">Real-time terminal stream for prod-eks-us-east-1</p>
+</div>
+<div class="flex flex-wrap items-center gap-3">
+<div class="flex p-0.5 rounded-lg border border-border-dark bg-sidebar-dark">
+<button class="px-3 py-1.5 text-xs font-medium rounded-md bg-filter-bg text-slate-100 transition-colors">All</button>
+<button class="px-3 py-1.5 text-xs font-medium rounded-md text-slate-400 hover:text-slate-200 transition-colors">Info</button>
+<button class="px-3 py-1.5 text-xs font-medium rounded-md text-slate-400 hover:text-slate-200 transition-colors">Warn</button>
+<button class="px-3 py-1.5 text-xs font-medium rounded-md text-slate-400 hover:text-slate-200 transition-colors">Success</button>
+</div>
+<button class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border-dark bg-nav-active hover:bg-border-dark text-slate-200 text-xs font-medium transition-colors">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+                        Copy all
+                    </button>
+</div>
+</div>
+<!-- Terminal Card -->
+<div class="flex-1 flex flex-col bg-card-bg border border-border-dark rounded-[10px] overflow-hidden shadow-2xl">
+<!-- Terminal Header -->
+<div class="h-10 bg-card-header border-b border-border-dark flex items-center justify-between px-4 flex-shrink-0">
+<div class="flex items-center gap-3">
+<div class="flex gap-1.5">
+<div class="w-3 h-3 rounded-full bg-red-500/80 border border-red-500/20"></div>
+<div class="w-3 h-3 rounded-full bg-yellow-500/80 border border-yellow-500/20"></div>
+<div class="w-3 h-3 rounded-full bg-green-500/80 border border-green-500/20"></div>
+</div>
+<div class="text-[11px] font-mono text-slate-400 ml-2 select-all">
+                            $ autostack logs --follow --cluster prod-eks-us-east-1
+                        </div>
+</div>
+<div class="flex items-center gap-1.5 px-2 py-0.5 rounded-full border border-green-500/30 bg-green-500/10">
+<div class="w-2 h-2 rounded-full bg-green-500 pulse-dot"></div>
+<span class="text-[10px] font-medium text-green-400 uppercase tracking-wider">Live</span>
+</div>
+</div>
+<!-- Terminal Body -->
+<div class="flex-1 p-4 overflow-y-auto terminal-scroll font-mono text-[12px] leading-relaxed select-text">
+<div class="flex flex-col gap-1.5 min-w-max">
+<div class="flex gap-3 hover:bg-white/5 px-2 py-0.5 rounded transition-colors group">
+<span class="text-log-time shrink-0">14:22:01.104</span>
+<span class="text-log-info font-medium shrink-0 w-12">INFO</span>
+<span class="text-log-tag shrink-0">[argocd]</span>
+<span class="text-slate-300">Starting synchronization for application 'api-gateway'</span>
+</div>
+<div class="flex gap-3 hover:bg-white/5 px-2 py-0.5 rounded transition-colors group">
+<span class="text-log-time shrink-0">14:22:03.451</span>
+<span class="text-log-info font-medium shrink-0 w-12">INFO</span>
+<span class="text-log-tag shrink-0">[kube-api]</span>
+<span class="text-slate-300">Creating new pod api-gateway-7f89c5b-xyz12 in namespace 'production'</span>
+</div>
+<div class="flex gap-3 hover:bg-white/5 px-2 py-0.5 rounded transition-colors group">
+<span class="text-log-time shrink-0">14:22:05.892</span>
+<span class="text-log-success font-medium shrink-0 w-12">SUCCESS</span>
+<span class="text-log-tag shrink-0">[kube-let]</span>
+<span class="text-slate-300">Pod api-gateway-7f89c5b-xyz12 successfully created and scheduled on ip-10-0-12-145.ec2.internal</span>
+</div>
+<div class="flex gap-3 hover:bg-white/5 px-2 py-0.5 rounded transition-colors group">
+<span class="text-log-time shrink-0">14:22:08.112</span>
+<span class="text-log-info font-medium shrink-0 w-12">INFO</span>
+<span class="text-log-tag shrink-0">[containerd]</span>
+<span class="text-slate-300">Pulling image "dkr.ecr.us-east-1.amazonaws.com/api-gateway:v2.4.1"</span>
+</div>
+<div class="flex gap-3 hover:bg-white/5 px-2 py-0.5 rounded transition-colors group">
+<span class="text-log-time shrink-0">14:22:15.634</span>
+<span class="text-log-warn font-medium shrink-0 w-12">WARN</span>
+<span class="text-log-tag shrink-0">[ecr-agent]</span>
+<span class="text-slate-300">Image size (1.2GB) exceeds recommended threshold (800MB). Consider optimizing Dockerfile.</span>
+</div>
+<div class="flex gap-3 hover:bg-white/5 px-2 py-0.5 rounded transition-colors group">
+<span class="text-log-time shrink-0">14:22:19.005</span>
+<span class="text-log-success font-medium shrink-0 w-12">SUCCESS</span>
+<span class="text-log-tag shrink-0">[containerd]</span>
+<span class="text-slate-300">Successfully pulled image "dkr.ecr.us-east-1.amazonaws.com/api-gateway:v2.4.1" in 10.893s</span>
+</div>
+<div class="flex gap-3 hover:bg-white/5 px-2 py-0.5 rounded transition-colors group">
+<span class="text-log-time shrink-0">14:22:21.442</span>
+<span class="text-log-info font-medium shrink-0 w-12">INFO</span>
+<span class="text-log-tag shrink-0">[kube-let]</span>
+<span class="text-slate-300">Started container api-gateway</span>
+</div>
+<div class="flex gap-3 hover:bg-white/5 px-2 py-0.5 rounded transition-colors group">
+<span class="text-log-time shrink-0">14:22:25.187</span>
+<span class="text-log-success font-medium shrink-0 w-12">SUCCESS</span>
+<span class="text-log-tag shrink-0">[health-chk]</span>
+<span class="text-slate-300">Readiness probe passed for container api-gateway: HTTP GET http://10.0.12.145:8080/healthz status 200</span>
+</div>
+<div class="flex gap-3 hover:bg-white/5 px-2 py-0.5 rounded transition-colors group">
+<span class="text-log-time shrink-0">14:22:26.502</span>
+<span class="text-log-info font-medium shrink-0 w-12">INFO</span>
+<span class="text-log-tag shrink-0">[coie-engine]</span>
+<span class="text-slate-300">Evaluating cluster health and efficiency metrics...</span>
+</div>
+<div class="flex gap-3 hover:bg-white/5 px-2 py-0.5 rounded transition-colors group">
+<span class="text-log-time shrink-0">14:22:28.911</span>
+<span class="text-log-success font-medium shrink-0 w-12">SUCCESS</span>
+<span class="text-log-tag shrink-0">[coie-engine]</span>
+<span class="text-slate-300">COIE score updated: 94/100. Deployment efficient. CPU requests optimal.</span>
+</div>
+<div class="flex gap-3 hover:bg-white/5 px-2 py-0.5 rounded transition-colors group">
+<span class="text-log-time shrink-0">14:22:30.015</span>
+<span class="text-log-info font-medium shrink-0 w-12">INFO</span>
+<span class="text-log-tag shrink-0">[argocd]</span>
+<span class="text-slate-300">Application 'api-gateway' is fully synced and Healthy.</span>
+</div>
+<!-- Blinking Cursor -->
+<div class="flex gap-3 px-2 py-0.5 mt-1">
+<div class="w-2 h-3.5 bg-green-500 blinking-cursor mt-0.5"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>
