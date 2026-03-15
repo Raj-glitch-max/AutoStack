@@ -1,0 +1,27 @@
+name: 'AutoStack Rollback'
+description: 'Rollback your AutoStack deployment to a previous version'
+branding:
+  icon: 'rotate-ccw'
+  color: 'orange'
+
+inputs:
+  token:
+    description: 'AutoStack API token (use secrets.AUTOSTACK_TOKEN)'
+    required: true
+  environment:
+    description: 'Target environment name (production, staging, etc.)'
+    required: true
+  to:
+    description: 'Optional: specific commit SHA to roll back to (defaults to previous deployment)'
+    required: false
+    default: ''
+
+outputs:
+  rolled_back_to:
+    description: 'Commit SHA of the deployment rolled back to'
+  previous_deployment_id:
+    description: 'The deployment ID that was rolled back to'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'

@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { User, Mail, Lock, Eye, EyeOff, Layers, Github, Building, Loader2 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../hooks/useAuth';
+import analytics from '../lib/analytics';
+
 
 function PasswordStrength({ password }) {
     const getStrength = (p) => {
@@ -61,6 +63,7 @@ export default function SignupPage() {
                 organization_name: form.org,
             });
             toast.success('Account created — check your email to confirm');
+            analytics.track('signup', { email: form.email, org: form.org });
             navigate('/onboarding');
         } catch (err) {
             toast.error(err.message || 'Signup failed');
@@ -79,7 +82,7 @@ export default function SignupPage() {
 
     const inputStyle = { background: 'var(--bg-card)', border: '1px solid var(--border-default)', color: 'var(--text-primary)', outline: 'none' };
 
-    const renderField = (label, field, icon, type = 'text', placeholder = '') => {
+    const renderField = (label, field, icon, placeholder = '') => {
         const Icon = icon;
         const isPassword = field === 'password' || field === 'confirm';
         return (
@@ -119,11 +122,11 @@ export default function SignupPage() {
                 <p className="text-center text-sm mb-8" style={{ color: 'var(--text-muted)' }}>Start deploying in minutes</p>
 
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                    {renderField('Full name', 'name', User, 'text', 'Alex Chen')}
-                    {renderField('Work email', 'email', Mail, 'email', 'alex@company.com')}
-                    {renderField('Organization name', 'org', Building, 'text', 'Acme Corp')}
-                    {renderField('Password', 'password', Lock, 'password', '••••••••')}
-                    {renderField('Confirm password', 'confirm', Lock, 'password', '••••••••')}
+                    {renderField('Full name', 'name', User, 'Alex Chen')}
+                    {renderField('Work email', 'email', Mail, 'alex@company.com')}
+                    {renderField('Organization name', 'org', Building, 'Acme Corp')}
+                    {renderField('Password', 'password', Lock, '••••••••')}
+                    {renderField('Confirm password', 'confirm', Lock, '••••••••')}
 
                     <button type="submit" disabled={loading}
                         className="w-full h-[44px] rounded-lg font-medium text-sm text-white cursor-pointer flex items-center justify-center gap-2 mt-1"

@@ -1,0 +1,35 @@
+name: 'AutoStack Deploy'
+description: 'Deploy your application to your cloud via AutoStack'
+branding:
+  icon: 'upload-cloud'
+  color: 'blue'
+
+inputs:
+  token:
+    description: 'AutoStack API token (use secrets.AUTOSTACK_TOKEN)'
+    required: true
+  environment:
+    description: 'Target environment name (production, staging, etc.)'
+    required: true
+  wait:
+    description: 'Wait for deployment to complete before returning (true/false)'
+    required: false
+    default: 'true'
+  timeout:
+    description: 'Maximum wait time in minutes (default: 15)'
+    required: false
+    default: '15'
+
+outputs:
+  live_url:
+    description: 'The live URL of the deployed application'
+  deployment_id:
+    description: 'The AutoStack deployment ID (for rollback)'
+  duration_seconds:
+    description: 'Time taken for the deployment in seconds'
+  estimated_monthly_cost:
+    description: 'Estimated monthly AWS cost for this environment'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'

@@ -1,11 +1,11 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, FolderGit2, GitBranch, Server, Activity, FileText, Settings, Search, Bell, ChevronDown, LogOut } from 'lucide-react';
+import { LayoutDashboard, FolderGit2, GitBranch, Server, Activity, FileText, Settings, Search, Bell, ChevronDown, LogOut, DollarSign, Rocket } from 'lucide-react';
 
 // Lazy load tab components
-const OverviewTab = lazy(() => import('./tabs/OverviewTab'));
-const ProjectsTab = lazy(() => import('./tabs/ProjectsTab'));
-const PipelinesTab = lazy(() => import('./tabs/PipelinesTab'));
+const EnvironmentsTab = lazy(() => import('./tabs/EnvironmentsTab'));
+const DeploymentsTab = lazy(() => import('./tabs/DeploymentsTab'));
+const CostTab = lazy(() => import('./tabs/CostTab'));
 const InfrastructureTab = lazy(() => import('./tabs/InfrastructureTab'));
 const MonitoringTab = lazy(() => import('./tabs/MonitoringTab'));
 const LogsTab = lazy(() => import('./tabs/LogsTab'));
@@ -17,6 +17,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useClusters } from '../hooks/useData';
 import { SkeletonText } from './ui/Skeleton';
 import TabErrorBoundary from './TabErrorBoundary';
+import analytics from '../lib/analytics';
 
 /* ─── Command Palette (⌘K) ─── */
 function DashboardCommandPalette({ isOpen, onClose, navItems, setActiveTab }) {
@@ -39,7 +40,7 @@ function DashboardCommandPalette({ isOpen, onClose, navItems, setActiveTab }) {
                     ))}
                     <div className="px-3 py-2 mt-2 text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">Actions</div>
                     <button className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-[var(--bg-card)] rounded-lg text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-left">
-                        <span className="flex items-center gap-3"><FolderGit2 size={16} /> New Project</span>
+                        <span className="flex items-center gap-3"><FolderGit2 size={16} /> New Service</span>
                         <span className="text-xs bg-[var(--bg-card)] px-1.5 py-0.5 rounded border border-[var(--border-default)]">⌘N</span>
                     </button>
                 </div>
@@ -66,7 +67,10 @@ export default function Dashboard() {
             if (clusters.length === 0 && activeTab !== 'settings') {
                 navigate('/onboarding');
             } else if (!activeClusterId && clusters.length > 0) {
-                setActiveClusterId(clusters[0].id);
+                const firstId = clusters[0].id;
+                if (firstId !== activeClusterId) {
+                    Promise.resolve().then(() => setActiveClusterId(firstId));
+                }
             }
         }
     }, [clusters, clustersLoading, activeClusterId, activeTab, navigate]);
@@ -88,13 +92,20 @@ export default function Dashboard() {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, []);
 
+    // Track tab switches
+    useEffect(() => {
+        if (activeTab) {
+            analytics.track('tab_switch', { tab: activeTab });
+        }
+    }, [activeTab]);
+
     const navItems = [
-        { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-        { id: 'projects', label: 'Projects', icon: FolderGit2 },
-        { id: 'pipelines', label: 'Pipelines', icon: GitBranch },
-        { id: 'infrastructure', label: 'Infrastructure', icon: Server },
-        { id: 'monitoring', label: 'Monitoring', icon: Activity },
-        { id: 'logs', label: 'Logs', icon: FileText },
+        { id: 'environments', label: 'Environments', icon: Server },
+        { id: 'deployments', label: 'Deployments', icon: Rocket },
+        { id: 'cost', label: 'Cloud Cost', icon: DollarSign },
+        { id: 'infrastructure', label: 'Infra Map', icon: LayoutDashboard },
+        { id: 'monitoring', label: 'Observability', icon: Activity },
+        { id: 'logs', label: 'Global Logs', icon: FileText },
     ];
 
     const currentTabName = [...navItems, { id: 'settings', label: 'Settings' }].find(t => t.id === activeTab)?.label;
@@ -131,19 +142,19 @@ export default function Dashboard() {
                                     <ChevronDown size={14} className="text-[var(--text-muted)] ml-auto" />
                                 </div>
                                 <div className="flex items-center justify-between text-[11px]">
-                                    <span className="text-[var(--text-muted)]">{activeCluster.provider} · {activeCluster.node_count} nodes</span>
-                                    <span className="font-mono text-[var(--green)]">{activeCluster.health_score}</span>
+                                    <span className="text-[var(--text-muted)]">{activeCluster.provider?.toUpperCase()} · {activeCluster.region || 'us-east-1'}</span>
+                                    <span className="font-mono text-[var(--green)]">{activeCluster.health_score}%</span>
                                 </div>
                             </>
                         ) : (
-                            <div className="text-[11px] text-[var(--text-muted)] text-center">No clusters found</div>
+                            <div className="text-[11px] text-[var(--text-muted)] text-center">No environments found</div>
                         )}
                     </div>
                 </div>
 
                 {/* Navigation */}
                 <div className="flex-1 overflow-y-auto py-2">
-                    <div className="px-4 text-[10px] font-semibold tracking-widest text-[var(--text-dim)] mb-2 uppercase">Platform</div>
+                    <div className="px-4 text-[10px] font-semibold tracking-widest text-[var(--text-dim)] mb-2 uppercase">BYOC Platform</div>
                     <nav className="space-y-0.5">
                         {navItems.map(item => {
                             const active = activeTab === item.id;
@@ -197,7 +208,7 @@ export default function Dashboard() {
                 <header className="h-[52px] sticky top-0 z-20 bg-[var(--bg-surface)]/90 backdrop-blur border-b border-[var(--border-default)] px-6 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <h1 className="font-semibold text-[15px]">{currentTabName}</h1>
-                        <span className="text-[11px] text-[var(--text-muted)] hidden sm:inline-block">Cluster health and activity</span>
+                        <span className="text-[11px] text-[var(--text-muted)] hidden sm:inline-block">Cloud control plane & security</span>
                     </div>
                     <div className="flex items-center gap-4">
                         <div
@@ -220,9 +231,9 @@ export default function Dashboard() {
                 <div className="p-6 max-w-[1200px] w-full mx-auto pb-20 animate-fadeIn">
                     <TabErrorBoundary onRetry={() => window.location.reload()}>
                         <Suspense fallback={<div className="animate-pulse space-y-4"><div className="h-8 bg-[var(--bg-card)] rounded w-1/4"></div><div className="h-64 bg-[var(--bg-card)] rounded"></div></div>}>
-                            {activeTab === 'overview' && <OverviewTab onNavigate={setActiveTab} cluster={activeCluster} />}
-                            {activeTab === 'projects' && <ProjectsTab cluster={activeCluster} />}
-                            {activeTab === 'pipelines' && <PipelinesTab cluster={activeCluster} />}
+                            {activeTab === 'environments' && <EnvironmentsTab onNavigate={setActiveTab} cluster={activeCluster} />}
+                            {activeTab === 'deployments' && <DeploymentsTab cluster={activeCluster} />}
+                            {activeTab === 'cost' && <CostTab cluster={activeCluster} />}
                             {activeTab === 'infrastructure' && <InfrastructureTab cluster={activeCluster} />}
                             {activeTab === 'monitoring' && <MonitoringTab cluster={activeCluster} />}
                             {activeTab === 'logs' && <LogsTab cluster={activeCluster} />}

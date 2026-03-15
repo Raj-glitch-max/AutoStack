@@ -44,20 +44,20 @@ export const infraResources = [
 ];
 
 export const initialLogLines = [
-    { time: '10:24:01', level: 'INFO', service: 'argocd', msg: 'Sync triggered for api-gateway' },
-    { time: '10:24:02', level: 'INFO', service: 'argocd', msg: 'Cloning repository main branch' },
-    { time: '10:24:04', level: 'INFO', service: 'kubelet', msg: 'Pulling image registry.autostack.io/api:v2.1.4' },
-    { time: '10:24:08', level: 'INFO', service: 'kubelet', msg: 'Image pull complete (1.2GB)' },
-    { time: '10:24:09', level: 'INFO', service: 'k8s-api', msg: 'Creating pod api-gateway-7d9f4b6c-xk8pl' },
-    { time: '10:24:10', level: 'INFO', service: 'k8s-api', msg: 'Pod scheduled on node ip-10-0-1-23' },
-    { time: '10:24:11', level: 'INFO', service: 'kubelet', msg: 'Container starting...' },
-    { time: '10:24:13', level: 'SUCCESS', service: 'kubelet', msg: 'Readiness probe passed' },
-    { time: '10:24:13', level: 'SUCCESS', service: 'argocd', msg: 'Rollout complete — 3/3 replicas ready' },
-    { time: '10:24:14', level: 'INFO', service: 'coie', msg: 'COIE cycle starting for prod-eks-us-east-1' },
-    { time: '10:24:18', level: 'INFO', service: 'coie', msg: 'Evaluated 42 workloads in 4.2s' },
-    { time: '10:24:18', level: 'WARN', service: 'coie', msg: 'ECR: 3 images have critical CVEs (worker-queue, ml-inference)' },
-    { time: '10:24:18', level: 'SUCCESS', service: 'coie', msg: 'Score report: Security 87 (+2) Reliability 94 Cost 73 Perf 91' },
-    { time: '10:24:19', level: 'INFO', service: 'aire', msg: 'Monitoring event stream...' },
+    { time: '10:24:01', level: 'INFO', service: 'aws-sts', msg: 'Assumed Role: AutoStackCloudManager' },
+    { time: '10:24:02', level: 'INFO', service: 'terraform', msg: 'Planning infrastructure: vpc-0a4b, eks-prod-01' },
+    { time: '10:24:04', level: 'INFO', service: 'cloudwatch', msg: 'Subscription filter created for /aws/eks/prod' },
+    { time: '10:24:08', level: 'INFO', service: 'iam', msg: 'Policy sync complete: SecurityAudit + VPCManagement' },
+    { time: '10:24:09', level: 'INFO', service: 'eks', msg: 'Cluster prod-eks-us-east-1 state: ACTIVE' },
+    { time: '10:24:10', level: 'INFO', service: 'vpc', msg: 'Peering connection pcx-0d9f established' },
+    { time: '10:24:11', level: 'INFO', service: 'ec2', msg: 'Node Group scale up: +3 m5.large instances' },
+    { time: '10:24:13', level: 'SUCCESS', service: 'health', msg: 'AWS Control Plane connectivity verified' },
+    { time: '10:24:13', level: 'SUCCESS', service: 'cloud-sync', msg: 'Infrastructure drift scan: 0 changes detected' },
+    { time: '10:24:14', level: 'INFO', service: 'coie', msg: 'Cost optimization cycle starting...' },
+    { time: '10:24:18', level: 'INFO', service: 'coie', msg: 'Analyzed 12 AWS services in 1.4s' },
+    { time: '10:24:18', level: 'WARN', service: 'coie', msg: 'NAT Gateway: Zero traffic detected. Est. savings: $32/mo' },
+    { time: '10:24:18', level: 'SUCCESS', service: 'coie', msg: 'Score report: Security 92 (+2) Reliability 94 Cost 81 Perf 95' },
+    { time: '10:24:19', level: 'INFO', service: 'aire', msg: 'Monitoring CloudTrail event stream...' },
 ];
 
 export const liveLogPool = [
@@ -79,20 +79,19 @@ export const liveLogPool = [
 ];
 
 export const terminalLines = [
-    { text: '$ autostack init my-cluster', color: 'var(--term-prompt)', speed: 'cmd' },
-    { text: 'Initializing AutoStack environment... Done.', color: 'var(--text-muted)', speed: 'fast' },
-    { text: '$ autostack deploy .', color: 'var(--term-prompt)', speed: 'cmd' },
-    { text: 'Analyzing repository...', color: 'var(--term-info)', speed: 'fast' },
-    { text: 'Detected Node.js application (Express)', color: 'var(--term-text)', speed: 'fast' },
-    { text: 'Generating Dockerfile...', color: 'var(--term-text)', speed: 'fast' },
-    { text: 'Building image registry.autostack.io/app:v1.0.4...', color: 'var(--term-text)', speed: 'fast', highlight: 'registry.autostack.io/app:v1.0.4' },
-    { text: 'Pushing image...', color: 'var(--term-text)', speed: 'fast' },
-    { text: 'Applying Kubernetes manifests...', color: 'var(--term-info)', speed: 'fast' },
-    { text: '✓ deployment.apps/api-server created', color: 'var(--term-text)', speed: 'fast' },
-    { text: '✓ service/api-service created', color: 'var(--term-text)', speed: 'fast' },
-    { text: '✓ ingress.networking.k8s.io/api-ingress configured', color: 'var(--term-text)', speed: 'fast' },
+    { text: '$ autostack connect aws', color: 'var(--term-prompt)', speed: 'cmd' },
+    { text: 'Verifying IAM Role: AutoStackCloudManager... Done.', color: 'var(--text-muted)', speed: 'fast' },
+    { text: 'Verifying Region: us-east-1... Verified.', color: 'var(--text-muted)', speed: 'fast' },
+    { text: '$ autostack deploy git@github.com:acme/api.git', color: 'var(--term-prompt)', speed: 'cmd' },
+    { text: '[1/5] ANALYZING: Detected Go 1.21 stack', color: 'var(--term-info)', speed: 'fast' },
+    { text: '[2/5] PLANNING: 3 EC2 nodes, 1 RDS Instance', color: 'var(--term-text)', speed: 'fast' },
+    { text: '[3/5] PROVISIONING: Applying AWS cloud-formation...', color: 'var(--term-text)', speed: 'fast' },
+    { text: '[4/5] BUILDING: Container image registry.aws.com/api:latest', color: 'var(--term-text)', speed: 'fast', highlight: 'registry.aws.com/api:latest' },
+    { text: '[5/5] DEPLOYING: Updating EKS service target...', color: 'var(--term-info)', speed: 'fast' },
+    { text: '✓ Cloud environment is ready.', color: 'var(--term-text)', speed: 'fast' },
+    { text: '✓ Service live on private VPC.', color: 'var(--term-text)', speed: 'fast' },
     { text: 'Deploy successful! 🚀', color: 'var(--term-prompt)', speed: 'fast', bold: true },
-    { text: 'Live URL: https://api.myapp.com', color: 'var(--text-muted)', speed: 'fast' },
+    { text: 'Service URL: https://api.acme.cloud', color: 'var(--text-muted)', speed: 'fast' },
 ];
 
 export const activityEvents = [

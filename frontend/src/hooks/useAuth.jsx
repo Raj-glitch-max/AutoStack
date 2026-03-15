@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { useState, useEffect, useCallback, createContext, useContext } from 'react';
 import { supabase } from '../lib/supabase';
 import { errorTracker } from '../lib/errorTracker';
@@ -5,6 +6,10 @@ import { analytics } from '../lib/analytics';
 
 const AuthContext = createContext(null);
 
+/**
+ * AuthProvider provides the global authentication state and methods.
+ * This pattern combines the provider and hook in one file for better encapsulation.
+ */
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [session, setSession] = useState(null);

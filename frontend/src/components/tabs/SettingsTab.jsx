@@ -6,8 +6,21 @@ import { useAuth } from '../../hooks/useAuth';
 import { SkeletonRow } from '../ui/Skeleton';
 import EmptyState from '../ui/EmptyState';
 
+function TriggerRow({ n }) {
+  const [on, setOn] = useState(n.default);
+  return (
+    <div className="flex items-start justify-between gap-4">
+      <div>
+        <div className="font-medium text-sm">{n.label}</div>
+        <div className="text-xs text-[var(--text-muted)] mt-1">{n.desc}</div>
+      </div>
+      <ToggleSwitch checked={on} onChange={setOn} />
+    </div>
+  );
+}
+
 export default function SettingsTab() {
-    const [subTab, setSubTab] = useState('Credentials');
+    const [subTab, setSubTab] = useState('Cloud Access');
     const { data: integrations, loading: intsLoading } = useIntegrations();
     const { user } = useAuth();
     const orgId = user?.user_metadata?.org_id;
@@ -19,9 +32,9 @@ export default function SettingsTab() {
     });
 
     const tabs = [
-        { id: 'Credentials', icon: Cloud },
+        { id: 'Cloud Access', icon: Cloud },
         { id: 'Integrations', icon: PlugZap },
-        { id: 'Notifications', icon: Bell },
+        { id: 'Security & Auth', icon: ShieldAlert },
         { id: 'Team & Access', icon: Users },
     ];
 
@@ -39,39 +52,62 @@ export default function SettingsTab() {
 
             {/* Settings Content Area */}
             <div className="flex-1 max-w-[720px]">
-                {subTab === 'Credentials' && (
+                {subTab === 'Cloud Access' && (
                     <div className="space-y-6 animate-fadeIn">
                         <div>
-                            <h2 className="text-xl font-bold mb-1">Cloud Credentials</h2>
-                            <p className="text-sm text-[var(--text-muted)]">AutoStack uses IAM roles — no long-lived credentials stored.</p>
+                            <h2 className="text-xl font-bold mb-1">Cloud Control Plane</h2>
+                            <p className="text-sm text-[var(--text-muted)]">Manage the IAM roles and permissions AutoStack uses to provision your cloud.</p>
                         </div>
                         <Card className="p-6">
                             <div className="flex items-center justify-between mb-6">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded bg-[var(--text-primary)] flex items-center justify-center text-[var(--bg-base)]">
-                                        <Cloud size={18} fill="currentColor" />
+                                    <div className="w-10 h-10 rounded-lg bg-[var(--text-primary)] flex items-center justify-center text-[var(--bg-base)]">
+                                        <Cloud size={20} fill="currentColor" />
                                     </div>
-                                    <span className="font-bold">Amazon Web Services</span>
+                                    <div>
+                                        <span className="font-bold block">Amazon Web Services</span>
+                                        <span className="text-[10px] text-[var(--green)] font-bold uppercase tracking-wider">Verified Account</span>
+                                    </div>
                                 </div>
-                                <Tag color="var(--green)">Connected</Tag>
+                                <div className="flex items-center gap-2">
+                                    <StatusDot color="var(--green)" glow />
+                                    <Tag color="var(--green)" variant="secondary">Connected</Tag>
+                                </div>
                             </div>
-                            <div className="bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-lg p-4 space-y-3 mb-6">
-                                <div className="flex justify-between text-sm"><span className="text-[var(--text-muted)]">Account ID</span><span className="font-mono">123456789012</span></div>
-                                <div className="flex justify-between text-sm"><span className="text-[var(--text-muted)]">Region</span><span className="font-mono">us-east-1</span></div>
-                                <div className="flex justify-between text-sm"><span className="text-[var(--text-muted)]">Role ARN</span><span className="font-mono truncate ml-4">arn:aws:iam::123456789012:role/AutoStackRole</span></div>
-                                <div className="flex justify-between text-sm"><span className="text-[var(--text-muted)]">Last verified</span><span className="font-mono text-[var(--text-dim)]">2 minutes ago</span></div>
+                            <div className="bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-lg p-5 space-y-4 mb-6">
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-[var(--text-muted)]">AWS Account ID</span>
+                                    <span className="font-mono bg-[var(--bg-card)] px-2 py-0.5 rounded border border-[var(--border-default)]">1234-5678-9012</span>
+                                </div>
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-[var(--text-muted)]">Default Region</span>
+                                    <span className="font-mono bg-[var(--bg-card)] px-2 py-0.5 rounded border border-[var(--border-default)]">us-east-1</span>
+                                </div>
+                                <div className="flex justify-between items-start text-sm">
+                                    <span className="text-[var(--text-muted)]">IAM Role ARN</span>
+                                    <div className="text-right">
+                                        <span className="font-mono bg-[var(--bg-card)] px-2 py-0.5 rounded border border-[var(--border-default)] block max-w-[300px] truncate text-[11px]">arn:aws:iam::123456789012:role/AutoStackCloudManager</span>
+                                        <button className="text-[10px] text-[var(--blue-light)] hover:underline mt-1">Edit Role ARN</button>
+                                    </div>
+                                </div>
                             </div>
                             <div className="flex justify-end gap-3">
-                                <Button variant="secondary">Re-verify</Button>
-                                <Button variant="ghost" danger>Disconnect</Button>
+                                <Button variant="secondary" size="sm">Audit Permissions</Button>
+                                <Button variant="ghost" danger size="sm">Disconnect Provider</Button>
                             </div>
                         </Card>
-                        <button className="w-full rounded-xl border-2 border-dashed border-[var(--border-default)] p-6 flex flex-col items-center justify-center gap-2 hover:border-[var(--blue-primary)] hover:bg-[rgba(36,99,235,0.03)] transition-colors group">
-                            <div className="w-10 h-10 rounded-full bg-[var(--bg-card)] flex items-center justify-center group-hover:scale-110 transition-transform">
-                                <Plus size={20} className="text-[var(--blue-primary)]" />
+                        
+                        <div className="p-4 rounded-xl bg-[rgba(36,99,235,0.05)] border border-[rgba(36,99,235,0.2)]">
+                            <div className="flex items-start gap-3">
+                                <ShieldAlert size={18} className="text-[var(--blue-primary)] mt-0.5" />
+                                <div>
+                                    <h4 className="text-sm font-bold mb-1">Security Posture</h4>
+                                    <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                                        AutoStack is currently using a <strong>Limited Scope</strong> IAM policy. To enable VPC peering or Direct Connect management, upgrade to the "Full Networking" policy in your AWS console.
+                                    </p>
+                                </div>
                             </div>
-                            <span className="font-semibold text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]">Add cloud provider</span>
-                        </button>
+                        </div>
                     </div>
                 )}
 
@@ -103,7 +139,14 @@ export default function SettingsTab() {
                                     </Card>
                                 ))
                             ) : (
-                                <div className="text-[var(--text-muted)] text-sm py-10 text-center italic border border-dashed border-[var(--border-default)] rounded-xl">No integrations configured yet.</div>
+                                <div className="mt-4">
+                                    <EmptyState
+                                        icon={PlugZap}
+                                        title="No Integrations"
+                                        description="Connect external tools like GitHub, Slack, or PagerDuty to streamline your workflow."
+                                        action={{ label: 'Explore Integrations', onClick: () => {} }}
+                                    />
+                                </div>
                             )}
                         </div>
                     </div>
@@ -120,15 +163,9 @@ export default function SettingsTab() {
                                     { id: 2, label: 'AIRE incidents', desc: 'Auto-healing triggers and cluster anomalies', default: true },
                                     { id: 3, label: 'Score changes', desc: 'When COIE detects a drop in security or cost score', default: false },
                                     { id: 4, label: 'Weekly digest', desc: 'Platform performance and resource utilization summary', default: true },
-                                ].map(n => {
-                                    const [on, setOn] = useState(n.default);
-                                    return (
-                                        <div key={n.id} className="flex items-start justify-between gap-4">
-                                            <div><div className="font-medium text-sm">{n.label}</div><div className="text-xs text-[var(--text-muted)] mt-1">{n.desc}</div></div>
-                                            <ToggleSwitch checked={on} onChange={setOn} />
-                                        </div>
-                                    )
-                                })}
+                                ].map(n => (
+                                    <TriggerRow key={n.id} n={n} />
+                                ))}
                             </div>
                             <div className="p-5 border-t border-[var(--border-default)] bg-[var(--bg-surface)] py-4 flex justify-end">
                                 <Button>Save Preferences</Button>

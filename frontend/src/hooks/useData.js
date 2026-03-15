@@ -1,110 +1,136 @@
 // ⚠️ COST GUARDRAIL — READ BEFORE MODIFYING
-// All hooks must clean up subscriptions on unmount
+// All hooks must clean up subscriptions on unmount (provided by react-query + supabase)
 // All realtime channels use eventsPerSecond: 10 (set in supabase client)
 // Pagination max: 50 rows per query to limit bandwidth
 
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 
 /**
- * Fetch rows from a Supabase table with optional filters, ordering, and realtime subscription.
- * Returns { data, loading, error, refetch }.
+ * useSupabaseQuery refactored for TanStack Query
+ * Returns { data, isLoading, isError, error, refetch }.
  */
 export function useSupabaseQuery(table, { filters = {}, orderBy = 'created_at', ascending = false, limit = 50, realtime = false } = {}) {
-    const [data, setData] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const queryClient = useQueryClient();
+    const filterKey = JSON.stringify(filters);
 
-    const fetchData = useCallback(async () => {
-        setLoading(true);
-        let query = supabase.from(table).select('*');
-        Object.entries(filters).forEach(([key, value]) => {
-            query = query.eq(key, value);
-        });
-        query = query.order(orderBy, { ascending }).limit(limit);
-        const { data: rows, error: err } = await query;
-        if (err) { setError(err); } else { setData(rows || []); setError(null); }
-        setLoading(false);
-    }, [table, JSON.stringify(filters), orderBy, ascending, limit]);
+    const query = useQuery({
+        queryKey: [table, filters, orderBy, ascending, limit],
+        queryFn: async () => {
+            let q = supabase.from(table).select('*');
+            Object.entries(filters).forEach(([key, value]) => {
+                q = q.eq(key, value);
+            });
+            q = q.order(orderBy, { ascending }).limit(limit);
+            const { data, error } = await q;
+            if (error) throw error;
+            return data || [];
+        }
+    });
 
-    useEffect(() => {
-        fetchData();
-    }, [fetchData]);
-
-    // Realtime subscription — INSERT, UPDATE, DELETE refresh the query
+    // Realtime integration with React Query
     useEffect(() => {
         if (!realtime) return;
-        const channel = supabase
-            .channel(`${table}_changes`)
-            .on('postgres_changes', { event: '*', schema: 'public', table }, () => fetchData())
-            .subscribe();
-        return () => { supabase.removeChannel(channel); };
-    }, [table, realtime, fetchData]);
 
-    return { data, loading, error, refetch: fetchData };
+        const channel = supabase
+            .channel(`${table}_changes_${filterKey}`)
+            .on('postgres_changes', { event: '*', schema: 'public', table }, () => {
+                // Invalidate and refetch on any change
+                // This ensures consistency without complex manual state merging
+                queryClient.invalidateQueries({ queryKey: [table] });
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [table, filterKey, realtime, queryClient]);
+
+    return {
+        data: query.data || [],
+        loading: query.isLoading, // mapping for backward compatibility
+        isLoading: query.isLoading,
+        error: query.error,
+        refetch: query.refetch
+    };
 }
 
 /**
  * Fetch a single row by ID.
  */
 export function useSupabaseRow(table, id) {
-    const [data, setData] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const query = useQuery({
+        queryKey: [table, id],
+        queryFn: async () => {
+            if (!id) return null;
+            const { data, error } = await supabase.from(table).select('*').eq('id', id).single();
+            if (error) throw error;
+            return data;
+        },
+        enabled: !!id
+    });
 
-    useEffect(() => {
-        if (!id) { setLoading(false); return; }
-        (async () => {
-            setLoading(true);
-            const { data: row, error: err } = await supabase.from(table).select('*').eq('id', id).single();
-            if (err) { setError(err); } else { setData(row); setError(null); }
-            setLoading(false);
-        })();
-    }, [table, id]);
-
-    return { data, loading, error };
+    return {
+        data: query.data,
+        loading: query.isLoading,
+        error: query.error
+    };
 }
 
 /**
- * Insert a row into a Supabase table.
- * Returns { mutate, loading, error }.
+ * Generic Insert Mutation
  */
 export function useSupabaseInsert(table) {
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+    const queryClient = useQueryClient();
 
-    const mutate = useCallback(async (row) => {
-        setLoading(true);
-        setError(null);
-        const { data, error: err } = await supabase.from(table).insert(row).select().single();
-        setLoading(false);
-        if (err) { setError(err); throw err; }
-        return data;
-    }, [table]);
+    const mutation = useMutation({
+        mutationFn: async (row) => {
+            const { data, error } = await supabase.from(table).insert(row).select().single();
+            if (error) throw error;
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: [table] });
+        }
+    });
 
-    return { mutate, loading, error };
+    return {
+        mutate: mutation.mutateAsync,
+        loading: mutation.isPending,
+        error: mutation.error
+    };
 }
 
 /**
- * Update a row in a Supabase table by ID.
+ * Generic Update Mutation
  */
 export function useSupabaseUpdate(table) {
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+    const queryClient = useQueryClient();
 
-    const mutate = useCallback(async (id, updates) => {
-        setLoading(true);
-        setError(null);
-        const { data, error: err } = await supabase.from(table).update(updates).eq('id', id).select().single();
-        setLoading(false);
-        if (err) { setError(err); throw err; }
-        return data;
-    }, [table]);
+    const mutation = useMutation({
+        mutationFn: async ({ id, updates }) => {
+            const { data, error } = await supabase.from(table).update(updates).eq('id', id).select().single();
+            if (error) throw error;
+            return data;
+        },
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: [table] });
+            queryClient.invalidateQueries({ queryKey: [table, data.id] });
+        }
+    });
 
-    return { mutate, loading, error };
+    // Wrapped to match previous signature mutate(id, updates)
+    const mutate = (id, updates) => mutation.mutateAsync({ id, updates });
+
+    return {
+        mutate,
+        loading: mutation.isPending,
+        error: mutation.error
+    };
 }
 
-// ─── Domain-Specific Hooks ───
+// ─── Domain-Specific Hooks (Preserving API) ───
 
 export function useClusters() {
     return useSupabaseQuery('clusters', { orderBy: 'created_at', realtime: true });

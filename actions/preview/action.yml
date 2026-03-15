@@ -1,0 +1,23 @@
+name: 'AutoStack Preview'
+description: 'Create preview environments for pull requests'
+branding:
+  icon: 'eye'
+  color: 'purple'
+
+inputs:
+  token:
+    description: 'AutoStack API token (use secrets.AUTOSTACK_TOKEN)'
+    required: true
+  staging_environment:
+    description: 'Base staging environment to create preview from'
+    required: true
+
+outputs:
+  preview_url:
+    description: 'The live URL of the preview environment'
+  deployment_id:
+    description: 'The AutoStack deployment ID'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'

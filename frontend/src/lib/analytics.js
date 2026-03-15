@@ -38,3 +38,5 @@ export const analytics = {
         window.__posthog?.reset();
     },
 };
+
+export default analytics;

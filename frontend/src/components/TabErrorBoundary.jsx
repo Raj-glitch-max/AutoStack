@@ -43,7 +43,7 @@ class TabErrorBoundary extends React.Component {
                                 Reload app
                             </Button>
                         </div>
-                        {process.env.NODE_ENV === 'development' && (
+                        {import.meta.env.DEV && (
                             <pre className="mt-6 p-4 bg-black/20 rounded text-[10px] font-mono text-left w-full overflow-x-auto text-red-400">
                                 {this.state.error?.toString()}
                             </pre>

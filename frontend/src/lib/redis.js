@@ -53,7 +53,7 @@ export const cache = {
         if (!result) return null;
         try {
             return JSON.parse(result);
-        } catch (e) {
+        } catch {
             return result;
         }
     },

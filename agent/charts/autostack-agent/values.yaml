@@ -1,0 +1,14 @@
+# Default values for autostack-agent.
+agent:
+  image: raj-glitch-max/autostack-agent
+  tag: latest
+  token: "" # Must be set via --set agent.token=...
+controlPlane:
+  url: "" # Must be set via --set controlPlane.url=...
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi

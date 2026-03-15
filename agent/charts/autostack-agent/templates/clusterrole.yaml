@@ -1,0 +1,24 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: autostack-agent-role
+rules:
+- apiGroups: [""]
+  resources: ["nodes", "pods", "events"]
+  verbs: ["list", "watch", "get"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "statefulsets", "daemonsets"]
+  verbs: ["list", "watch", "get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: autostack-agent-binding
+subjects:
+- kind: ServiceAccount
+  name: autostack-agent
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: autostack-agent-role
+  apiGroup: rbac.authorization.k8s.io

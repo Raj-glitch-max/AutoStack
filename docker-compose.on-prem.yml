@@ -1,0 +1,66 @@
+version: '3.9'
+services:
+  autostack-api:
+    image: ghcr.io/autostack/control-plane:latest
+    environment:
+      DATABASE_URL: postgres://autostack:${DB_PASSWORD}@postgres:5432/autostack
+      REDIS_URL: redis://redis:6379
+      AUTOSTACK_LICENSE_KEY: ${AUTOSTACK_LICENSE_KEY}
+      GITHUB_APP_ID: ${GITHUB_APP_ID}
+      GITHUB_APP_PRIVATE_KEY: ${GITHUB_APP_PRIVATE_KEY}
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - redis
+
+  autostack-frontend:
+    image: ghcr.io/autostack/frontend:latest
+    environment:
+      API_URL: http://autostack-api:8080
+      SUPABASE_URL: http://supabase-api:8000
+    ports:
+      - "3000:3000"
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: autostack
+      POSTGRES_USER: autostack
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redisdata:/data
+
+  supabase-api:
+    image: supabase/gotrue:v2.169.0
+    environment:
+      GOTRUE_JWT_SECRET: ${GOTRUE_JWT_SECRET}
+      DATABASE_URL: postgres://autostack:${DB_PASSWORD}@postgres:5432/autostack
+      API_EXTERNAL_URL: http://localhost:8000
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+
+  supabase-realtime:
+    image: supabase/realtime:v2.34.47
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: autostack
+      DB_USER: autostack
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${GOTRUE_JWT_SECRET}
+      REPLICATION_MODE: RLS
+      REPLICATION_POLL_INTERVAL: 100
+    depends_on:
+      - postgres
+
+volumes:
+  pgdata:
+  redisdata:

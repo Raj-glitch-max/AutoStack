@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: autostack-agent
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: autostack-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: autostack-agent
+  template:
+    metadata:
+      labels:
+        app: autostack-agent
+    spec:
+      serviceAccountName: autostack-agent
+      containers:
+      - name: agent
+        image: "{{ .Values.agent.image }}:{{ .Values.agent.tag }}"
+        env:
+        - name: AGENT_TOKEN
+          value: {{ .Values.agent.token | quote }}
+        - name: CONTROL_PLANE_URL
+          value: {{ .Values.controlPlane.url | quote }}
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
