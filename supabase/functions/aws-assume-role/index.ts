@@ -1,9 +1,9 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { STSClient, AssumeRoleCommand } from 'npm:@aws-sdk/client-sts@3'
+import { STSClient, AssumeRoleCommand, GetCallerIdentityCommand } from 'npm:@aws-sdk/client-sts@3'
 import { IAMClient, SimulatePrincipalPolicyCommand } from 'npm:@aws-sdk/client-iam@3'
-import { handleCors, corsHeaders } from '../_shared/cors.ts'
-import { validateOrRespond } from '../_shared/validator.ts'
+import { CORS_HEADERS, jsonResponse, errorResponse } from '../_shared/cors.ts'
+import { Redis } from 'https://esm.sh/@upstash/redis@1'
+import { checkRateLimit, rateLimitResponse } from '../_shared/rate-limiter.ts'
 
 const REQUIRED_PERMISSIONS = [
   'eks:CreateCluster', 'eks:DescribeCluster', 'eks:DeleteCluster',
@@ -18,102 +18,73 @@ const REQUIRED_PERMISSIONS = [
   'sts:AssumeRole', 'sts:GetCallerIdentity'
 ]
 
-const ERROR_MAP: Record<string, string> = {
-  'AccessDenied': 'Cannot assume role. Check that the role trust policy allows AutoStack and includes ExternalId.',
-  'NoSuchEntity': 'IAM role not found. Verify the role ARN is correct.',
-  'InvalidClientTokenId': 'AWS credentials invalid. Check your Account ID.',
-  'ExpiredToken': 'AWS credentials expired. Refresh your credentials.',
-  'ValidationError': 'Invalid ARN format. Use: arn:aws:iam::ACCOUNT_ID:role/ROLE_NAME',
-}
+const redis = new Redis({
+  url: Deno.env.get('UPSTASH_REDIS_REST_URL')!,
+  token: Deno.env.get('UPSTASH_REDIS_REST_TOKEN')!,
+})
 
-function getFriendlyError(err: any): string {
-  const code = err.name || ''
-  return ERROR_MAP[code] || `AWS error: ${err.message}`
+function getFriendlyError(err: Error): string {
+  const code = (err as any).name || ''
+  const MAP: Record<string, string> = {
+    'AccessDenied': 'Cannot assume role. Check that the role trust policy allows AutoStack and includes ExternalId.',
+    'NoSuchEntity': 'IAM role not found. Verify the role ARN is correct.',
+    'InvalidClientTokenId': 'AWS credentials invalid. Check your Account ID.',
+  }
+  return MAP[code] || `AWS error: ${err.message}`
 }
 
 function validateArn(arn: string): boolean {
   return /^arn:aws:iam::\d{12}:role\/[\w+=,.@\-/]+$/.test(arn)
 }
 
-serve(async (req) => {
-  const corsRes = handleCors(req)
-  if (corsRes) return corsRes
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { status: 200, headers: CORS_HEADERS })
+  }
 
-  console.log('[AWS] Starting aws-assume-role request')
-
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-  const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey)
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  )
 
   try {
     const authHeader = req.headers.get('Authorization')
     const token = authHeader?.replace('Bearer ', '')
-    if (!token) {
-        return new Response(JSON.stringify({ error: 'Unauthorized: Missing token' }), {
-            status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        })
-    }
+    if (!token) return errorResponse(401, 'Unauthorized: Missing token')
 
-    const { data: { user }, error: authErr } = await supabaseAdmin.auth.getUser(token)
-    if (authErr || !user) {
-        return new Response(JSON.stringify({ error: `Unauthorized: ${authErr?.message || 'Invalid user'}` }), {
-            status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        })
-    }
+    const { data: { user }, error: authErr } = await supabase.auth.getUser(token)
+    if (authErr || !user) return errorResponse(401, authErr?.message || 'Invalid user')
 
-    const orgId = user.user_metadata?.org_id
-    if (!orgId) {
-        return new Response(JSON.stringify({ error: 'Unauthorized: Org context missing' }), {
-            status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        })
-    }
+    const org_id = user.user_metadata?.org_id
+    if (!org_id) return errorResponse(401, 'Org context missing in JWT')
 
-    console.log(`[AWS] User authorized: ${user.id}, Org: ${orgId}`)
+    // Rate Limiting
+    const { pass, remaining, resetIn } = await checkRateLimit(redis, 'aws-assume-role', user.id)
+    if (!pass) return rateLimitResponse('aws-assume-role', resetIn, CORS_HEADERS)
 
-    const body = await req.json()
-    const validationError = validateOrRespond(body, {
-        account_id: { type: 'string', required: true },
-        region: { type: 'string', required: true },
-        role_arn: { type: 'string', required: true }
-    }, corsHeaders)
-    if (validationError) return validationError
+    const { account_id, region, role_arn, display_name } = await req.json()
 
-    const { account_id, region, role_arn, display_name } = body
-
-    if (!/^\d{12}$/.test(account_id)) {
-      return new Response(JSON.stringify({ error: 'account_id must be a 12-digit number' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
+    // Input validation
+    if (!account_id || !/^\d{12}$/.test(account_id)) {
+      return errorResponse(400, 'account_id must be a 12-digit number')
     }
     if (!validateArn(role_arn)) {
-      return new Response(JSON.stringify({ error: 'Invalid role_arn format' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
+      return errorResponse(400, 'Invalid role_arn format')
+    }
+    const arnAccountId = role_arn.split(':')[4]
+    if (arnAccountId !== account_id) {
+      return errorResponse(400, `ARN account (${arnAccountId}) does not match account_id (${account_id})`)
     }
 
-    const awsAccessKeyId = Deno.env.get('AWS_ACCESS_KEY_ID')
-    const awsSecretAccessKey = Deno.env.get('AWS_SECRET_ACCESS_KEY')
-    
-    if (!awsAccessKeyId || !awsSecretAccessKey) {
-        throw new Error('Server-side AWS credentials missing. Please set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY secrets.')
-    }
-
-    const sts = new STSClient({ 
-        region,
-        credentials: {
-            accessKeyId: awsAccessKeyId,
-            secretAccessKey: awsSecretAccessKey
-        }
-    })
+    // Attempt to assume role
+    const sts = new STSClient({ region })
     let tempCreds: { accessKeyId: string; secretAccessKey: string; sessionToken: string }
-
-    console.log(`[AWS] Attempting AssumeRole for: ${role_arn}`)
 
     try {
       const { Credentials } = await sts.send(new AssumeRoleCommand({
         RoleArn: role_arn,
         RoleSessionName: `AutoStack-Verify-${Date.now()}`,
-        ExternalId: orgId,
+        ExternalId: org_id,        // SECURITY: confused deputy prevention
         DurationSeconds: 900
       }))
       if (!Credentials?.AccessKeyId) throw new Error('STS returned empty credentials')
@@ -122,114 +93,71 @@ serve(async (req) => {
         secretAccessKey: Credentials.SecretAccessKey!,
         sessionToken: Credentials.SessionToken!
       }
-      console.log(`[AWS] AssumeRole successful`)
-    } catch (err: any) {
-      const friendly = getFriendlyError(err)
-      console.error(`[AWS] AssumeRole failed: ${err.message}`)
-      
-      const existing = await supabaseAdmin.from('cloud_credentials').select('id').eq('org_id', orgId).eq('role_arn', role_arn).maybeSingle()
-      if (existing.data) {
-        await supabaseAdmin.from('cloud_credentials').update({ status: 'error', error_message: friendly }).eq('id', existing.data.id)
-      } else {
-        await supabaseAdmin.from('cloud_credentials').insert({
-          org_id: orgId, provider: 'aws', display_name: display_name || `AWS ${account_id}`,
-          account_id, region, role_arn, external_id: orgId,
-          status: 'error', error_message: friendly
-        })
-      }
+    } catch (err: unknown) {
+      const friendly = getFriendlyError(err as Error)
+      await supabase.from('cloud_credentials').upsert({
+        org_id, provider: 'aws', display_name: display_name || `AWS ${account_id}`,
+        account_id, region, role_arn, external_id: org_id,
+        status: 'error', error_message: friendly
+      }, { onConflict: 'org_id,role_arn' })
 
-      return new Response(JSON.stringify({ error: friendly }), {
-        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
+      return errorResponse(403, friendly)
     }
 
-    console.log(`[AWS] Simulating permissions for assumed role`)
-    const iam = new IAMClient({
-      region,
-      credentials: tempCreds
-    })
-
-    let permissionsOk = false
-    let missing: string[] = []
-    let simulationErrorObj: any = null
+    // Check permissions using the temporary credentials
+    const iam = new IAMClient({ region, credentials: tempCreds })
+    const callerSts = new STSClient({ region, credentials: tempCreds })
+    const missing: string[] = []
 
     try {
-      const simulationResult = await iam.send(new SimulatePrincipalPolicyCommand({
-        PolicySourceArn: role_arn,
-        ActionNames: REQUIRED_PERMISSIONS
-      }))
-
-      console.log(`[aws-assume-role] Simulation results returned. Evaluated ${simulationResult.EvaluationResults?.length} actions.`);
-      if (simulationResult.EvaluationResults && simulationResult.EvaluationResults.length > 0) {
-         console.log(`Sample evaluation decision for ${simulationResult.EvaluationResults[0].EvalActionName}: ${simulationResult.EvaluationResults[0].EvalDecision}`);
-         simulationErrorObj = `Sample Decision: ${simulationResult.EvaluationResults[0].EvalDecision}`;
+      const { Arn: callerArn } = await callerSts.send(new GetCallerIdentityCommand({}))
+      const batchSize = 100
+      for (let i = 0; i < REQUIRED_PERMISSIONS.length; i += batchSize) {
+        const batch = REQUIRED_PERMISSIONS.slice(i, i + batchSize)
+        const { EvaluationResults } = await iam.send(new SimulatePrincipalPolicyCommand({
+          PolicySourceArn: callerArn!,
+          ActionNames: batch,
+          ResourceArns: ['*']
+        }))
+        for (const r of EvaluationResults || []) {
+          if (r.EvalDecision !== 'allowed') missing.push(r.EvalActionName!)
+        }
       }
-      missing = simulationResult.EvaluationResults?.filter(r => r.EvalDecision !== 'allowed').map(r => r.EvalActionName!) || []
-      permissionsOk = missing.length === 0
-    } catch (simError: any) {
-      console.error('[aws-assume-role] Simulation API crashed:', simError.message)
-      simulationErrorObj = simError.message;
-      missing = REQUIRED_PERMISSIONS // If simulation crashes, assume all permissions are missing
-      permissionsOk = false
+    } catch (err) {
+      console.error('Could not verify permissions:', (err as Error).message)
     }
 
-    console.log(`[AWS] Permissions check: ${permissionsOk ? 'PASS' : 'FAIL'}`)
+    const permissionsOk = missing.length === 0
 
-    const existingCred = await supabaseAdmin
+    const { data: savedCred, error: saveError } = await supabase
       .from('cloud_credentials')
+      .upsert({
+        org_id, provider: 'aws',
+        display_name: display_name || `AWS ${account_id}`,
+        account_id, region, role_arn, external_id: org_id,
+        status: permissionsOk ? 'verified' : 'error',
+        last_verified_at: new Date().toISOString(),
+        permissions_ok: permissionsOk,
+        missing_permissions: missing,
+        error_message: permissionsOk ? null : `Missing ${missing.length} permissions`
+      }, { onConflict: 'org_id,role_arn' })
       .select('id')
-      .eq('org_id', orgId)
-      .eq('role_arn', role_arn)
-      .maybeSingle()
+      .single()
 
-    let credentialId: string
-    if (existingCred.data) {
-      credentialId = existingCred.data.id
-      const { error: updateError } = await supabaseAdmin
-        .from('cloud_credentials')
-        .update({
-          display_name: display_name || `AWS ${account_id}`,
-          account_id, region, external_id: orgId,
-          status: permissionsOk ? 'verified' : 'error',
-          last_verified_at: new Date().toISOString(),
-          permissions_ok: permissionsOk,
-          missing_permissions: missing,
-          error_message: permissionsOk ? null : `Missing ${missing.length} permissions`
-        })
-        .eq('id', credentialId)
-      if (updateError) throw updateError
-    } else {
-      const { data: inserted, error: insertError } = await supabaseAdmin
-        .from('cloud_credentials')
-        .insert({
-          org_id: orgId, provider: 'aws',
-          display_name: display_name || `AWS ${account_id}`,
-          account_id, region, role_arn, external_id: orgId,
-          status: permissionsOk ? 'verified' : 'error',
-          last_verified_at: new Date().toISOString(),
-          permissions_ok: permissionsOk,
-          missing_permissions: missing,
-          error_message: permissionsOk ? null : `Missing ${missing.length} permissions`
-        })
-        .select('id')
-        .single()
-      if (insertError) throw insertError
-      credentialId = inserted.id
-    }
+    if (saveError) return errorResponse(500, `Failed to save credential: ${saveError.message}`)
 
-    return new Response(JSON.stringify({
+    return jsonResponse({
       success: true,
-      credential_id: credentialId,
+      credential_id: savedCred.id,
       permissions_ok: permissionsOk,
       missing_permissions: missing,
-      verified_at: new Date().toISOString()
-    }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-
-  } catch (err: any) {
-    console.error(`[AWS] Error:`, err.message)
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      verified_at: new Date().toISOString(),
+      message: permissionsOk
+        ? `IAM role verified — ${REQUIRED_PERMISSIONS.length} permissions confirmed`
+        : `Role assumed but missing ${missing.length} permissions. Add them to proceed.`
     })
+  } catch (err: unknown) {
+    console.error('aws-assume-role error:', (err as Error).message)
+    return errorResponse(500, (err as Error).message)
   }
 })

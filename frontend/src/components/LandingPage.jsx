@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Layers, Check, Zap, Eye, RefreshCw, Shield, Cloud, ArrowRight, Github, Twitter, MessageSquare } from 'lucide-react';
+import { UserButton } from '@clerk/react';
+import { useAuth } from '../hooks/useAuth';
 import { Button, Tag, Card, TerminalWindow } from './ui/index';
 import { terminalLines } from '../data';
 import ArchitectureDiagram from './ArchitectureDiagram';
@@ -116,6 +118,7 @@ const features = [
 /* ─── LandingPage ─── */
 export default function LandingPage() {
     const navigate = useNavigate();
+    const { loading, isAuthenticated } = useAuth();
     const [scrolled, setScrolled] = useState(false);
     
     useEffect(() => {
@@ -143,8 +146,18 @@ export default function LandingPage() {
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <button className="text-[13px] font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] px-4" onClick={() => navigate('/login')}>Sign In</button>
-                    <Button onClick={() => navigate('/signup')} size="sm" className="shadow-lg">Start Building</Button>
+                    {!loading && !isAuthenticated && (
+                        <>
+                            <button className="text-[13px] font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] px-4" onClick={() => navigate('/login')}>Sign In</button>
+                            <Button onClick={() => navigate('/signup')} size="sm" className="shadow-lg">Start Building</Button>
+                        </>
+                    )}
+                    {!loading && isAuthenticated && (
+                        <>
+                            <Button onClick={() => navigate('/dashboard')} size="sm" className="shadow-lg">Dashboard</Button>
+                            <UserButton afterSignOutUrl="/" />
+                        </>
+                    )}
                 </div>
             </nav>
 

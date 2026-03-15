@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from './hooks/useAuth';
+import { useAuth } from '@clerk/react';
 import LandingPage from './components/LandingPage';
 import Dashboard from './components/Dashboard';
 import LoginPage from './pages/LoginPage';
@@ -8,8 +8,8 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import OnboardingPage from './pages/OnboardingPage';
 
 function AuthGuard({ children }) {
-  const { isAuthenticated, loading } = useAuth();
-  if (loading) {
+  const { isLoaded, isSignedIn } = useAuth();
+  if (!isLoaded) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--bg-primary, #0a0a0f)' }}>
         <div style={{ width: 32, height: 32, border: '3px solid rgba(99,102,241,0.3)', borderTopColor: '#6366f1', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
@@ -17,14 +17,14 @@ function AuthGuard({ children }) {
       </div>
     );
   }
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (!isSignedIn) return <Navigate to="/login" replace />;
   return children;
 }
 
 function PublicOnly({ children }) {
-  const { isAuthenticated, loading } = useAuth();
-  if (loading) return null;
-  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
+  const { isLoaded, isSignedIn } = useAuth();
+  if (!isLoaded) return null;
+  if (isSignedIn) return <Navigate to="/dashboard" replace />;
   return children;
 }
 

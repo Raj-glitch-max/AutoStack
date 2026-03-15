@@ -302,58 +302,81 @@ export default function OnboardingPage() {
     const handleDeploy = async ({ repoUrl, size, setProgress }) => {
         setLoading(true);
         try {
-            // 1. Create Project
+            // 1. Resolve installation_id (First integration for simplicity)
+            const { data: integrations } = await supabase.from('integrations').select('installation_id').limit(1);
+            const installation_id = integrations?.[0]?.installation_id || 'test-install-id';
+
+            // 2. Create Project
+            const projectName = repoUrl.split('/').pop().replace('.git', '');
             const { data: project, error: projErr } = await supabase.from('projects').insert({
-                name: repoUrl.split('/').pop(),
+                name: projectName,
                 repo_url: repoUrl,
                 cloud_credential_id: credentials.id,
+                org_id: credentials.org_id,
                 environment: 'production',
-                status: 'creating'
+                provisioning_status: 'pending'
             }).select().single();
 
             if (projErr) throw projErr;
 
-            // 2. Invoke DIE Analyze
+            // 3. Invoke DIE Analyze (Triggers the whole chain)
             const { data, error } = await supabase.functions.invoke('die-analyze', {
-                body: { project_id: project.id, size }
+                body: { project_id: project.id, installation_id, size }
             });
 
             if (error || !data.success) throw new Error(error?.message || 'Analysis failed');
 
-            // 3. Poll for Deployment Status
+            // 4. Poll for DIE Stage Updates
             const pollDeployment = async () => {
-                const { data: depls } = await supabase.from('deployments')
-                    .select('*')
-                    .eq('project_id', project.id)
-                    .order('created_at', { ascending: false })
-                    .limit(1);
+                const { data: pData } = await supabase.from('projects')
+                    .select('die_stage, provisioning_status, live_url')
+                    .eq('id', project.id)
+                    .single();
                 
-                if (depls && depls[0]) {
-                    const d = depls[0];
-                    if (d.stage === 'live') {
-                        setDeployment(d);
+                if (pData) {
+                    const { die_stage, provisioning_status, live_url } = pData;
+
+                    if (provisioning_status === 'live') {
+                        setDeployment({ live_url });
                         setStep(3);
                         return;
                     }
-                    if (d.stage === 'failed') throw new Error('Deployment failed');
+                    if (provisioning_status === 'failed') throw new Error('Deployment failed');
                     
-                    // Update progress UI based on stage
-                    const stageMap = { 'analyzing': 1, 'planning': 2, 'provisioning': 3, 'building': 4, 'deploying': 4 };
-                    const currentStageIdx = stageMap[d.stage] || 0;
-                    
-                    setProgress(prev => prev.map((s, idx) => ({
-                        ...s,
-                        status: idx < currentStageIdx - 1 ? 'done' : idx === currentStageIdx - 1 ? 'running' : 'pending'
-                    })));
+                    // Update progress UI based on engine stages
+                    const stages = [
+                        { label: 'Analyzing repository...', key: 'analyzing' },
+                        { label: 'Planning infrastructure...', key: 'planning' },
+                        { label: 'Provisioning VPC & EKS...', keys: ['VPC', 'EKS'] },
+                        { label: 'Configuring Networking...', keys: ['ALB', 'kubeconfig'] }
+                    ];
+
+                    setProgress(stages.map((s, idx) => {
+                        const isDone = (provisioning_status === 'live') || 
+                                     (s.key && die_stage === s.key) || 
+                                     (s.keys && s.keys.some(k => die_stage?.includes(k)));
+                        
+                        // Simple logic for progress: if a later stage is active, previous are done
+                        const currentStageIdx = stages.findIndex(st => 
+                            (st.key && die_stage === st.key) || 
+                            (st.keys && st.keys.some(k => die_stage?.includes(k)))
+                        );
+
+                        let status = 'pending';
+                        if (idx < currentStageIdx) status = 'done';
+                        else if (idx === currentStageIdx) status = 'running';
+
+                        return { id: idx + 1, label: s.label, status };
+                    }));
                 }
-                setTimeout(pollDeployment, 3000);
+                setTimeout(pollDeployment, 4000);
             };
 
             pollDeployment();
 
         } catch (err) {
             toast.error(err.message || 'Deployment failed');
-            setStep(2); // Go back to repo input
+            setStep(2); 
         } finally {
             setLoading(false);
         }

@@ -14,6 +14,7 @@ const SettingsTab = lazy(() => import('./tabs/SettingsTab'));
 import { StatusDot } from './ui/index';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../hooks/useAuth';
+import { UserButton } from '@clerk/react';
 import { useClusters } from '../hooks/useData';
 import { SkeletonText } from './ui/Skeleton';
 import TabErrorBoundary from './TabErrorBoundary';
@@ -184,21 +185,23 @@ export default function Dashboard() {
                 </div>
 
                 {/* User Row */}
-                <div className="p-4 border-t border-[var(--border-default)]">
-                    <div className="flex items-center gap-3 cursor-pointer group">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--purple)] to-[var(--blue-primary)] flex-shrink-0 border border-[var(--border-default)]" />
-                        <div className="flex flex-col flex-1 overflow-hidden">
-                            <span className="text-xs font-medium group-hover:text-[var(--blue-primary)] transition-colors truncate">
-                                {user?.user_metadata?.full_name || 'User'}
-                            </span>
-                            <span className="text-[11px] text-[var(--text-muted)] truncate">{user?.email}</span>
-                        </div>
-                        <button onClick={handleLogout} title="Sign out"
-                            className="text-[var(--text-dim)] hover:text-[var(--red)] transition-colors cursor-pointer"
-                            style={{ background: 'none', border: 'none' }}>
-                            <LogOut size={14} />
-                        </button>
-                    </div>
+                <div className="p-4 border-t border-[var(--border-default)] flex items-center justify-center">
+                    <UserButton 
+                        showName={true}
+                        appearance={{
+                            elements: {
+                                userButtonBox: {
+                                    flexDirection: 'row-reverse',
+                                    gap: '12px',
+                                },
+                                userButtonOuterIdentifier: {
+                                    color: 'var(--text-primary)',
+                                    fontSize: '13px',
+                                    fontWeight: '500',
+                                }
+                            }
+                        }}
+                    />
                 </div>
             </aside>
 

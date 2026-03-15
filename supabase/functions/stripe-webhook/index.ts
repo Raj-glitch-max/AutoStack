@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { createRedisClient } from '../_shared/redis.ts'
-import { handleCors, corsHeaders } from '../_shared/cors.ts'
+import { CORS_HEADERS, jsonResponse, errorResponse } from "../_shared/cors.ts"
+import Stripe from 'https://esm.sh/stripe@12.9.0?target=deno'
 
 const STRIPE_WEBHOOK_SECRET = Deno.env.get('STRIPE_WEBHOOK_SECRET')!;
 const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY')!;
@@ -18,45 +19,36 @@ if (priceIds.team_monthly) PRICE_TO_PLAN[priceIds.team_monthly] = 'team';
 if (priceIds.team_yearly) PRICE_TO_PLAN[priceIds.team_yearly] = 'team';
 
 Deno.serve(async (req) => {
-  const corsRes = handleCors(req)
-  if (corsRes) return corsRes
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: CORS_HEADERS })
+  }
 
   if (req.method !== 'POST') {
-    return new Response('Method not allowed', { 
-        status: 405, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-    });
+    return errorResponse(405, 'Method not allowed');
   }
 
   try {
+    const signature = req.headers.get('stripe-signature')
+    if (!signature) throw new Error('Missing stripe-signature header')
+
+    const stripe = new Stripe(STRIPE_SECRET_KEY, {
+      apiVersion: '2022-11-15',
+      httpClient: Stripe.createFetchHttpClient(),
+    })
+
     const body = await req.text();
-    const sig = req.headers.get('stripe-signature');
-
-    if (!sig || !STRIPE_WEBHOOK_SECRET) {
-      return new Response(JSON.stringify({ error: 'Missing signature' }), { 
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
-
-    // Verify Stripe signature
-    const event = await verifyStripeSignature(body, sig, STRIPE_WEBHOOK_SECRET);
-    if (!event) {
-      return new Response(JSON.stringify({ error: 'Invalid signature' }), { 
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
+    const event = await stripe.webhooks.constructEventAsync(
+      body,
+      signature,
+      STRIPE_WEBHOOK_SECRET
+    );
 
     // Idempotency check (RULE K1)
     const redis = createRedisClient();
     const eventKey = `stripe:event:${event.id}`;
     const alreadyProcessed = await redis.get(eventKey);
     if (alreadyProcessed) {
-      return new Response(JSON.stringify({ status: 'already_processed' }), { 
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      return jsonResponse({ status: 'already_processed' });
     }
     await redis.set(eventKey, '1', 86400); // 24h TTL
 
@@ -67,7 +59,7 @@ Deno.serve(async (req) => {
 
     switch (event.type) {
       case 'checkout.session.completed':
-        await handleCheckoutCompleted(supabase, event.data.object);
+        await handleCheckoutCompleted(supabase, stripe, event.data.object);
         break;
 
       case 'invoice.paid':
@@ -91,16 +83,10 @@ Deno.serve(async (req) => {
         break;
     }
 
-    return new Response(JSON.stringify({ received: true }), { 
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
+    return jsonResponse({ received: true })
   } catch (err: any) {
-    console.error('[stripe-webhook] Error:', err.message);
-    return new Response(JSON.stringify({ error: err.message }), { 
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
+    console.error(`[Stripe Webhook Error] ${err.message}`)
+    return errorResponse(400, err.message)
   }
 });
 
@@ -108,15 +94,15 @@ Deno.serve(async (req) => {
 // Event Handlers
 // ---------------------------------------------------------------------------
 
-async function handleCheckoutCompleted(supabase: any, session: any) {
+async function handleCheckoutCompleted(supabase: any, stripe: Stripe, session: any) {
   const { customer, subscription: subId } = session;
 
   // Fetch subscription from Stripe for full details
-  const sub = await stripeGet(`/v1/subscriptions/${subId}`);
-  const priceId = sub.items?.data?.[0]?.price?.id;
+  const sub = await stripe.subscriptions.retrieve(subId as string);
+  const priceId = (sub.items.data[0].price as any).id;
   const plan = PRICE_TO_PLAN[priceId] ?? 'pro';
 
-  const orgId = await getOrgIdFromCustomer(supabase, customer);
+  const orgId = await getOrgIdFromCustomer(supabase, customer as string);
   if (!orgId) {
     console.error('[stripe-webhook] No org found for customer:', customer);
     return;
@@ -240,60 +226,6 @@ async function getOrgIdFromCustomer(supabase: any, customerId: string): Promise<
   return data?.org_id ?? null;
 }
 
-async function stripeGet(path: string): Promise<any> {
-  const res = await fetch(`https://api.stripe.com${path}`, {
-    headers: {
-      'Authorization': `Bearer ${STRIPE_SECRET_KEY}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-  });
-  return res.json();
-}
-
 function epochToISO(epoch: number): string {
   return new Date(epoch * 1000).toISOString();
-}
-
-async function verifyStripeSignature(body: string, sig: string, secret: string): Promise<any | null> {
-  // Parse stripe-signature header
-  const elements = sig.split(',');
-  let timestamp = '';
-  let v1Signature = '';
-
-  for (const element of elements) {
-    const [key, value] = element.split('=');
-    if (key === 't') timestamp = value;
-    if (key === 'v1') v1Signature = value;
-  }
-
-  if (!timestamp || !v1Signature) return null;
-
-  // Verify: HMAC-SHA256(timestamp.body, secret)
-  const payload = `${timestamp}.${body}`;
-  const encoder = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    'raw',
-    encoder.encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign']
-  );
-  const sigBytes = await crypto.subtle.sign('HMAC', key, encoder.encode(payload));
-  const computed = Array.from(new Uint8Array(sigBytes))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
-
-  // Constant-time comparison
-  if (computed.length !== v1Signature.length) return null;
-  let mismatch = 0;
-  for (let i = 0; i < computed.length; i++) {
-    mismatch |= computed.charCodeAt(i) ^ v1Signature.charCodeAt(i);
-  }
-  if (mismatch !== 0) return null;
-
-  // Timestamp tolerance: reject events older than 5 minutes
-  const now = Math.floor(Date.now() / 1000);
-  if (Math.abs(now - parseInt(timestamp)) > 300) return null;
-
-  return JSON.parse(body);
 }

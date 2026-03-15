@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@clerk/react": "^6.1.0",
+    "@clerk/themes": "^2.4.57",
     "@sentry/react": "^10.43.0",
     "@supabase/supabase-js": "^2.99.1",
     "@tailwindcss/vite": "^4.2.1",

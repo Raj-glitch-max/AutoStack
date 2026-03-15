@@ -1,10 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Authorization, Content-Type',
-}
+import { CORS_HEADERS, jsonResponse, errorResponse } from '../_shared/cors.ts'
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -21,16 +16,12 @@ Deno.serve(async (req) => {
   try {
     body = await req.json()
   } catch {
-    return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
-      status: 400, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' }
-    })
+    return errorResponse(400, 'Invalid JSON body')
   }
 
   const user = body?.user
   if (!user?.id || !user?.email) {
-    return new Response(JSON.stringify({ error: 'No user in payload' }), {
-      status: 400, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' }
-    })
+    return errorResponse(400, 'No user in payload')
   }
 
   try {
@@ -46,9 +37,7 @@ Deno.serve(async (req) => {
       await supabase.auth.admin.updateUserById(user.id, {
         user_metadata: { ...user.user_metadata, org_id: existingMember.org_id, role: 'owner' }
       })
-      return new Response(JSON.stringify({ success: true, org_id: existingMember.org_id }), {
-        status: 200, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' }
-      })
+      return jsonResponse({ success: true, org_id: existingMember.org_id })
     }
 
     // Derive org name from email domain or provided metadata
@@ -120,16 +109,11 @@ Deno.serve(async (req) => {
       })
     }).catch(err => console.error('Welcome email failed (non-fatal):', err.message))
 
-    return new Response(JSON.stringify({ success: true, org_id: org.id, org_name: orgName }), {
-      status: 200, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' }
-    })
+    return jsonResponse({ success: true, org_id: org.id, org_name: orgName })
 
   } catch (error: unknown) {
     const err = error as Error
     console.error('auth-hook error:', err.message)
-    // Return 500 so Supabase Auth shows the error — DO NOT return 200 on failure
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' }
-    })
+    return errorResponse(500, err.message)
   }
 })
