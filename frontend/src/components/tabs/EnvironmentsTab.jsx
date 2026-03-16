@@ -43,8 +43,9 @@ function ScoreCard({ label, score, delta, color, history }) {
 }
 
 export default function EnvironmentsTab({ onNavigate, cluster }) {
+    const [timeRange, setTimeRange] = useState('24h');
     const { data: scores, loading: scoresLoading, error: scoresError } = useClusterScores(cluster?.id);
-    const { data: metrics, loading: metricsLoading, error: metricsError } = useClusterMetrics(cluster?.id);
+    const { data: metrics, loading: metricsLoading, error: metricsError } = useClusterMetrics(cluster?.id, timeRange);
     const { data: deployments, loading: depsLoading, error: depsError } = useDeployments(cluster?.id);
     const { data: incidents, loading: incLoading, error: incError } = useIncidents(cluster?.id);
 
@@ -175,8 +176,8 @@ export default function EnvironmentsTab({ onNavigate, cluster }) {
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="font-semibold text-sm">Request Throughput</h3>
                         <div className="flex items-center gap-1 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded p-1">
-                            {['1h', '6h', '24h', '7d'].map((r, i) => (
-                                <button key={r} className={`text-[10px] font-medium px-2 py-0.5 rounded ${i === 2 ? 'bg-[var(--bg-card)] text-[var(--text-primary)] shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}>{r}</button>
+                            {['1h', '6h', '24h', '7d'].map((r) => (
+                                <button key={r} onClick={() => setTimeRange(r)} className={`text-[10px] font-medium px-2 py-0.5 rounded transition-all ${timeRange === r ? 'bg-[var(--bg-card)] text-[var(--text-primary)] shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}>{r}</button>
                             ))}
                         </div>
                     </div>

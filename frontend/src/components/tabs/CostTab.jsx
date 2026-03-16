@@ -243,9 +243,11 @@ export default function CostTab({ cluster }) {
                     </div>
                     <div>
                         <div className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1">Potential Savings</div>
-                        <div className="text-3xl font-black text-[var(--amber)]">$124.80</div>
+                        <div className="text-3xl font-black text-[var(--amber)]">
+                            ${(riRecommendations.reduce((sum, r) => sum + r.annual_savings, 0) / 12).toFixed(2)}
+                        </div>
                         <div className="mt-2 text-xs text-[var(--text-muted)]">
-                            Identified in <strong>{cluster?.name || 'prod-cluster-01'}</strong>
+                            Identified in <strong>{cluster?.name || 'cluster'}</strong>
                         </div>
                     </div>
                     <Button size="sm" className="ml-auto" loading={optimizing} onClick={handleOptimize}>Optimize Now</Button>

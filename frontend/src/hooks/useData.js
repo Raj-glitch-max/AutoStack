@@ -20,7 +20,13 @@ export function useSupabaseQuery(table, { filters = {}, orderBy = 'created_at', 
         queryFn: async () => {
             let q = supabase.from(table).select('*');
             Object.entries(filters).forEach(([key, value]) => {
-                q = q.eq(key, value);
+                if (value && typeof value === 'object' && value.gte) {
+                    q = q.gte(key, value.gte);
+                } else if (value && typeof value === 'object' && value.lte) {
+                    q = q.lte(key, value.lte);
+                } else {
+                    q = q.eq(key, value);
+                }
             });
             q = q.order(orderBy, { ascending }).limit(limit);
             const { data, error } = await q;
@@ -184,11 +190,31 @@ export function useClusterScores(clusterId) {
     });
 }
 
-export function useClusterMetrics(clusterId) {
+export function useClusterMetrics(clusterId, timeRange = '1h') {
+    let limit = 24;
+    let gteDate = new Date();
+    
+    if (timeRange === '1h') {
+        limit = 60; // 1 data point per min
+        gteDate.setHours(gteDate.getHours() - 1);
+    } else if (timeRange === '6h') {
+        limit = 72; // 1 data point per 5 min
+        gteDate.setHours(gteDate.getHours() - 6);
+    } else if (timeRange === '24h') {
+        limit = 24; // 1 data point per hour
+        gteDate.setHours(gteDate.getHours() - 24);
+    } else if (timeRange === '7d') {
+        limit = 28; // 1 data point per 6 hours
+        gteDate.setDate(gteDate.getDate() - 7);
+    }
+
+    const filters = clusterId ? { cluster_id: clusterId } : {};
+    filters.sampled_at = { gte: gteDate.toISOString() };
+
     return useSupabaseQuery('cluster_metrics', {
-        filters: clusterId ? { cluster_id: clusterId } : {},
+        filters,
         orderBy: 'sampled_at',
-        limit: 24,
+        limit,
     });
 }
 

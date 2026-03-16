@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { Activity } from 'lucide-react';
 import { Card, Tag, ChartTooltipContent } from '../ui/index';
@@ -6,7 +7,8 @@ import EmptyState from '../ui/EmptyState';
 import { useClusterMetrics } from '../../hooks/useData';
 
 export default function MonitoringTab({ cluster }) {
-    const { data: metrics, loading, error, refetch } = useClusterMetrics(cluster?.id);
+    const [timeRange, setTimeRange] = useState('1h');
+    const { data: metrics, loading, error, refetch } = useClusterMetrics(cluster?.id, timeRange);
 
     if (!cluster) {
         return (
@@ -76,6 +78,11 @@ export default function MonitoringTab({ cluster }) {
                 <div className="flex items-center gap-3">
                     <h2 className="text-xl font-bold">Monitoring</h2>
                     <Tag small color="var(--text-muted)">Live Data</Tag>
+                </div>
+                <div className="flex items-center gap-1 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded p-1">
+                    {['1h', '6h', '24h', '7d'].map((r) => (
+                        <button key={r} onClick={() => setTimeRange(r)} className={`text-[10px] font-medium px-2 py-0.5 rounded transition-all ${timeRange === r ? 'bg-[var(--bg-card)] text-[var(--text-primary)] shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}>{r}</button>
+                    ))}
                 </div>
             </div>
 

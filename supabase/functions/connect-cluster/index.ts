@@ -1,10 +1,9 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { handleCors, corsHeaders } from '../_shared/cors.ts'
+import { CORS_HEADERS, corsResponse, jsonResponse, errorResponse } from '../_shared/cors.ts'
 import { validateOrRespond } from '../_shared/validator.ts'
 
 Deno.serve(async (req) => {
-  const corsRes = handleCors(req)
-  if (corsRes) return corsRes
+  if (req.method === 'OPTIONS') return corsResponse()
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -14,23 +13,17 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get('Authorization')
     const token = authHeader?.replace('Bearer ', '')
     if (!token) {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-            status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        })
+        return errorResponse(401, 'Unauthorized')
     }
 
     const { data: { user }, error: authErr } = await supabaseAdmin.auth.getUser(token)
     if (authErr || !user) {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-            status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        })
+        return errorResponse(401, 'Unauthorized')
     }
 
     const orgId = user.user_metadata?.org_id
     if (!orgId) {
-        return new Response(JSON.stringify({ error: 'Unauthorized: Org context missing' }), {
-            status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        })
+        return errorResponse(401, 'Unauthorized: Org context missing')
     }
 
     const body = await req.json()
@@ -38,7 +31,7 @@ Deno.serve(async (req) => {
         name: { type: 'string', required: true },
         provider: { type: 'string', required: true },
         region: { type: 'string', required: true }
-    }, corsHeaders)
+    }, CORS_HEADERS)
     if (validationError) return validationError
 
     const { name, provider, region } = body
@@ -63,25 +56,19 @@ Deno.serve(async (req) => {
 
     if (clusterErr) throw clusterErr
 
-    const helmCommand = `helm repo add autostack https://charts.autostack.com
-helm upgrade --install autostack-agent autostack/autostack-agent \\
+    const helmCommand = `helm upgrade --install autostack-agent oci://ghcr.io/raj-glitch-max/autostack-agent \\
   --namespace autostack --create-namespace \\
-  --set agentToken=${agentToken} \\
+  --set agent.token=${agentToken} \\
   --set clusterId=${cluster.id} \\
-  --set apiUrl=${supabaseUrl}/functions/v1`
+  --set controlPlane.url=${supabaseUrl}/functions/v1`
 
-    return new Response(JSON.stringify({ 
+    return jsonResponse({ 
       cluster_id: cluster.id,
       command: helmCommand 
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
 
   } catch (err: any) {
     console.error(`[Connect] Error:`, err.message)
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 400,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    })
+    return errorResponse(400, err.message)
   }
 })
