@@ -11,17 +11,27 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   )
 
-  let body: { user?: { id: string; email: string; user_metadata?: Record<string, unknown>; app_metadata?: Record<string, unknown> } }
+  let body: {
+    event?: string;
+    user?: { id: string; email: string; user_metadata?: Record<string, unknown>; app_metadata?: Record<string, unknown> }
+  }
 
   try {
     body = await req.json()
   } catch {
-    return errorResponse(400, 'Invalid JSON body')
+    // Return 200 even for bad JSON — a 5xx response breaks Supabase Auth signup flow
+    return jsonResponse({ ok: false, error: 'Invalid JSON body' })
+  }
+
+  // Handle both email signup ('SIGNED_UP') and OAuth ('USER_CREATED') events
+  const event = body?.event
+  if (event && event !== 'SIGNED_UP' && event !== 'USER_CREATED') {
+    return jsonResponse({ ok: true, skipped: true, reason: `unhandled event: ${event}` })
   }
 
   const user = body?.user
   if (!user?.id || !user?.email) {
-    return errorResponse(400, 'No user in payload')
+    return jsonResponse({ ok: false, error: 'No user in payload' })
   }
 
   try {
@@ -114,6 +124,8 @@ Deno.serve(async (req) => {
   } catch (error: unknown) {
     const err = error as Error
     console.error('auth-hook error:', err.message)
-    return errorResponse(500, err.message)
+    // CRITICAL: Return 200 even on error — returning 5xx causes Supabase Auth to abort
+    // the signup flow entirely, preventing user creation. Log for debugging, don't block.
+    return jsonResponse({ ok: false, error: err.message })
   }
 })
