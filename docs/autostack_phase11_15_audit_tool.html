@@ -1,0 +1,287 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.wrap{padding:1rem 0}
+.header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.5rem;gap:1rem}
+.header-left h1{font-size:18px;font-weight:500;margin-bottom:4px}
+.header-left p{font-size:13px;color:var(--color-text-secondary);line-height:1.5}
+.score-ring{flex-shrink:0;text-align:center}
+.score-big{font-size:32px;font-weight:500;line-height:1}
+.score-label{font-size:11px;color:var(--color-text-secondary);margin-top:4px}
+.verdict-bar{border-radius:var(--border-radius-md);padding:10px 14px;margin-bottom:1.5rem;font-size:13px;font-weight:500;border:0.5px solid}
+.verdict-pass{background:var(--color-background-success);color:var(--color-text-success);border-color:var(--color-border-success)}
+.verdict-warn{background:var(--color-background-warning);color:var(--color-text-warning);border-color:var(--color-border-warning)}
+.verdict-fail{background:var(--color-background-danger);color:var(--color-text-danger);border-color:var(--color-border-danger)}
+.section{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);margin-bottom:1rem;overflow:hidden}
+.section-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none}
+.section-head:hover{background:var(--color-background-secondary)}
+.section-title{font-size:14px;font-weight:500}
+.section-meta{display:flex;align-items:center;gap:8px}
+.phase-badge{font-size:11px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:4px;padding:2px 7px;color:var(--color-text-secondary)}
+.checkpoint-badge{font-size:11px;padding:2px 7px;border-radius:4px;border:0.5px solid}
+.cp-billing{background:#FAEEDA;color:#854F0B;border-color:#EF9F27}
+.cp-cloud{background:#E6F1FB;color:#185FA5;border-color:#378ADD}
+.cp-region{background:#E1F5EE;color:#0F6E56;border-color:#1D9E75}
+.cp-db{background:#EEEDFE;color:#534AB7;border-color:#7F77DD}
+.cp-enterprise{background:#FCEBEB;color:#A32D2D;border-color:#E24B4A}
+.section-score{font-size:13px;font-weight:500}
+.chevron{font-size:12px;color:var(--color-text-secondary);transition:transform 0.2s}
+.chevron.open{transform:rotate(90deg)}
+.section-body{border-top:0.5px solid var(--color-border-tertiary);display:none}
+.section-body.open{display:block}
+.item{display:grid;grid-template-columns:1fr auto;align-items:start;gap:12px;padding:10px 16px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.item:last-child{border-bottom:none}
+.item-left{display:flex;align-items:flex-start;gap:10px}
+.severity-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.sev-p0{background:#E24B4A}
+.sev-p1{background:#EF9F27}
+.sev-p2{background:#639922}
+.item-q{font-size:13px;line-height:1.45}
+.item-why{font-size:11px;color:var(--color-text-secondary);margin-top:3px;line-height:1.4}
+.status-group{display:flex;gap:4px;flex-shrink:0}
+.status-btn{border:0.5px solid var(--color-border-secondary);border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;background:transparent;color:var(--color-text-secondary);transition:all 0.15s}
+.status-btn:hover{background:var(--color-background-secondary)}
+.status-btn.active-pass{background:#EAF3DE;color:#3B6D11;border-color:#639922}
+.status-btn.active-warn{background:#FAEEDA;color:#854F0B;border-color:#EF9F27}
+.status-btn.active-fail{background:#FCEBEB;color:#A32D2D;border-color:#E24B4A}
+.bottom{margin-top:1.5rem;display:flex;gap:10px;flex-wrap:wrap}
+.action-btn{border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:8px 14px;font-size:13px;cursor:pointer;background:transparent;color:var(--color-text-secondary)}
+.action-btn:hover{background:var(--color-background-secondary)}
+.legend{display:flex;gap:12px;margin-top:1rem;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary)}
+.l-dot{width:7px;height:7px;border-radius:50%}
+.progress-track{height:4px;background:var(--color-background-secondary);border-radius:2px;margin:0.5rem 0 1rem;overflow:hidden}
+.progress-fill{height:4px;background:#1D9E75;border-radius:2px;transition:width 0.4s}
+</style>
+
+<div class="wrap">
+<div class="header">
+  <div class="header-left">
+    <h1>AutoStack — Phase 11–15 Audit Tool</h1>
+    <p>Complete each section at its checkpoint before continuing to the next phase.<br>Stripe has zero tolerance. Billing bugs = chargebacks. Database bugs = data loss.</p>
+  </div>
+  <div class="score-ring">
+    <div class="score-big" id="total-score">—</div>
+    <div class="score-label">ship score</div>
+  </div>
+</div>
+
+<div class="progress-track"><div class="progress-fill" id="prog" style="width:0%"></div></div>
+<div class="verdict-bar verdict-warn" id="verdict-bar">Answer all items to get your verdict.</div>
+
+<div id="sections"></div>
+
+<div class="legend">
+  <div class="legend-item"><div class="l-dot sev-p0"></div>P0 — ship blocker</div>
+  <div class="legend-item"><div class="l-dot sev-p1"></div>P1 — fix before scale</div>
+  <div class="legend-item"><div class="l-dot sev-p2"></div>P2 — improvement</div>
+</div>
+
+<div class="bottom">
+  <button class="action-btn" onclick="resetAll()">Reset all</button>
+  <button class="action-btn" onclick="exportReport()">Export report ↗</button>
+</div>
+</div>
+
+<script>
+const SECTIONS = [
+  {
+    id:'s8', title:'Section 8 — Stripe Billing Integrity', checkpoint:'Checkpoint #8', cpClass:'cp-billing', phase:'Phase 11',
+    items:[
+      {id:'h1',q:'Stripe webhook signature verified (Stripe-Signature header) before any body parsing or DB writes',why:'Without verification, attackers POST fake payment_succeeded events → free upgrades for everyone.',sev:'p0'},
+      {id:'h2',q:'Stripe webhook events are idempotent (event.id stored in Redis, duplicates return 200 without processing)',why:'Stripe retries for 72 hours. Without idempotency: duplicate plan upgrades, double invoice rows, double emails.',sev:'p0'},
+      {id:'h3',q:'Plan status re-fetched from DB at every privileged Edge Function call — NOT read from JWT',why:'JWT caches for up to 15 minutes. A plan downgrade is not enforced until the next token refresh.',sev:'p0'},
+      {id:'h4',q:'Stripe price IDs come from env secrets — user cannot pass arbitrary price IDs in request body',why:'If price IDs come from user input, an attacker can pass a $0 price ID and get any plan for free.',sev:'p0'},
+      {id:'h5',q:'checkout.session.completed → organizations.plan updated AND subscriptions row created/updated',why:'If only one is updated, there\'s a split-brain between the plan enforcement and the UI display.',sev:'p0'},
+      {id:'h6',q:'invoice.payment_failed → subscription.status = "past_due", dunning email sent within 5 min',why:'Silent payment failures = involuntary churn. Users don\'t know their card failed until service stops.',sev:'p1'},
+      {id:'h7',q:'Subscription cancellation: organizations.plan → "free", NOT data deletion (30-day grace period)',why:'Deleting data on cancel = outrage. 30-day grace period is industry standard and good faith.',sev:'p1'},
+      {id:'h8',q:'14-day trial: new org gets plan="pro", status="trialing" immediately on signup (no credit card)',why:'Requiring a credit card for trial kills conversion. Industry benchmark: no-CC trials convert 3× better.',sev:'p1'},
+      {id:'h9',q:'Trial expiry pg_cron runs daily and correctly downgrades expired trials to free plan',why:'A pg_cron job that never fires = free Pro access forever for trial users who never upgrade.',sev:'p1'},
+      {id:'h10',q:'Past-due banner visible in dashboard with Stripe Portal link for card update',why:'Users who cannot find the "update card" button will churn instead of recovering the payment.',sev:'p1'},
+      {id:'h11',q:'Stripe Customer Portal configured (can update card, view invoices, cancel)',why:'Without the portal, users must contact support to cancel. This is illegal in some jurisdictions (EU).',sev:'p1'},
+      {id:'h12',q:'Invoice PDF URLs stored in invoices table and downloadable from BillingTab',why:'Businesses need invoices for accounting. Missing invoices = support tickets.',sev:'p2'},
+    ]
+  },
+  {
+    id:'s9', title:'Section 9 — Multi-Cloud Abstraction', checkpoint:'Checkpoint #9', cpClass:'cp-cloud', phase:'Phase 12',
+    items:[
+      {id:'i1',q:'CloudProvider interface is the ONLY way provisioning code reaches cloud APIs (no direct SDK calls outside providers/)',why:'Direct AWS SDK calls scattered in functions = GCP/Azure support requires rewriting every function.',sev:'p0'},
+      {id:'i2',q:'getProvider(\'gcp\', creds) returns GCPProvider — getProvider(\'aws\', creds) returns AWSProvider (test both)',why:'A factory that always returns AWSProvider means GCP users get AWS errors. Not subtle.',sev:'p0'},
+      {id:'i3',q:'GCP Service Account JSON private key stored in Vault — NOT in cloud_credentials.config JSONB',why:'JSONB columns appear in DB exports, backups, and logs. Private keys in JSONB are permanently exposed.',sev:'p0'},
+      {id:'i4',q:'Azure client_secret stored in Vault — NOT in cloud_credentials.config',why:'Same as GCP. Secret in JSONB = leaked in first backup.',sev:'p0'},
+      {id:'i5',q:'GCP pricing uses GCP_PRICING constants — NOT AWS_PRICING (verify cost estimate for GCP deploy)',why:'Showing AWS prices for GCP deployments = user gets surprise bill. GCP compute is priced differently.',sev:'p1'},
+      {id:'i6',q:'Azure pricing uses Azure pricing constants — NOT AWS_PRICING or GCP_PRICING',why:'Azure has different pricing model (reserved vs. pay-as-you-go). Wrong estimates = distrust.',sev:'p1'},
+      {id:'i7',q:'GCP: VPC labeled with autostack:project_id before cluster creation (RULE A4 equivalent for GCP)',why:'Untagged/unlabeled GCP resources cannot be found by teardown → orphaned infrastructure.',sev:'p0'},
+      {id:'i8',q:'Azure: Resource Group tagged with autostack:project_id (teardown can delete entire group atomically)',why:'Azure teardown strategy: delete the Resource Group = delete everything. Tags enable finding the group.',sev:'p0'},
+      {id:'i9',q:'Full deploy + teardown tested on GCP: no orphaned resources in GCP console after teardown',why:'Orphaned GCP resources bill the user forever. Unlike AWS, GCP does not have a good tag-based bulk delete.',sev:'p1'},
+      {id:'i10',q:'Full deploy + teardown tested on Azure: no orphaned resources in Azure portal after teardown',why:'Same — Azure charges for all running resources regardless of AutoStack\'s tracking.',sev:'p1'},
+      {id:'i11',q:'Onboarding: selecting GCP shows GCP-specific credential fields (not AWS IAM role fields)',why:'Showing the wrong credential form = user confusion = support tickets = churn.',sev:'p1'},
+    ]
+  },
+  {
+    id:'s10', title:'Section 10 — Multi-Region Routing', checkpoint:'Checkpoint #10', cpClass:'cp-region', phase:'Phase 13',
+    items:[
+      {id:'j1',q:'Multi-region deploy shows TOTAL cost = N × per-region cost BEFORE provisioning starts',why:'User deploying to 3 regions expecting $187/mo and getting a $561/mo AWS bill = immediate churn.',sev:'p0'},
+      {id:'j2',q:'Provisioning uses Promise.allSettled (not Promise.all) — partial failure does not block other regions',why:'Promise.all: one region fails = all regions fail. $1200 of compute wasted if us-east-1 hits a limit.',sev:'p1'},
+      {id:'j3',q:'project.status = "degraded" when some regions succeed and some fail (not "failed" which implies total failure)',why:'"Failed" is wrong — the app IS live in 2 regions. User needs accurate status to know they\'re partially served.',sev:'p1'},
+      {id:'j4',q:'Route53 health check created per ALB — failed region automatically removed from routing within 90 seconds',why:'Without health checks, Route53 keeps sending traffic to a dead region. Users in that region get 502s.',sev:'p0'},
+      {id:'j5',q:'Teardown removes resources in ALL regions (not just the primary region)',why:'Teardown leaving 2 of 3 regions running = user pays for 2/3 of the infrastructure forever.',sev:'p0'},
+      {id:'j6',q:'EU regions show GDPR badge in the region picker UI (RULE M1)',why:'Sending EU user data to us-east-1 without disclosure can violate GDPR. Users need to make this choice consciously.',sev:'p1'},
+      {id:'j7',q:'project_regions table has a row per region with correct status (not just a JSONB blob in projects table)',why:'Normalizing regions into rows enables querying, filtering, and per-region status tracking independently.',sev:'p2'},
+      {id:'j8',q:'Route53 latency routing verified: requests from EU → eu-west-1, from US → us-east-1 (use VPN to test)',why:'Latency routing not working = all traffic hits primary region = defeats the purpose of multi-region.',sev:'p1'},
+    ]
+  },
+  {
+    id:'s11', title:'Section 11 — Managed Databases', checkpoint:'Checkpoint #11', cpClass:'cp-db', phase:'Phase 14',
+    items:[
+      {id:'k1',q:'Database password generated by AutoStack, stored ONLY in Vault — never in managed_databases table',why:'Password in DB column = visible in SELECT *, DB exports, supabase table editor. First exposure vector.',sev:'p0'},
+      {id:'k2',q:'RDS instance created with publicly_accessible = false (internal VPC only)',why:'Publicly accessible RDS = anyone on internet can attempt connections. Brute-force attacks start immediately.',sev:'p0'},
+      {id:'k3',q:'RDS in same VPC as EKS cluster (using project\'s vpc_id + private subnet IDs from rollback_data)',why:'Cross-VPC RDS = K8s pods cannot reach the DB without complex VPC peering. Connection fails silently.',sev:'p0'},
+      {id:'k4',q:'RDS Security Group: allows 5432 ONLY from EKS cluster security group (not 0.0.0.0/0)',why:'Open 5432 to all sources = any instance in the VPC (or internet if misconfigured) can reach your DB.',sev:'p0'},
+      {id:'k5',q:'Production environments: MultiAZ = true (RDS Multi-AZ). Staging/dev: MultiAZ = false',why:'Multi-AZ in dev/staging = 2× DB cost for no benefit. Single-AZ in production = 5-minute outage on node failure.',sev:'p1'},
+      {id:'k6',q:'K8s Secret (not ConfigMap) used for DATABASE_URL injection into pods',why:'ConfigMaps are unencrypted and shown in `kubectl describe pod`. Secrets are base64-encoded (better than plaintext).',sev:'p0'},
+      {id:'k7',q:'UI: database password NEVER shown after initial provisioning (show "••••••••", not the value)',why:'A UI that shows the password = phishing screenshots, shoulder surfing, video recordings.',sev:'p0'},
+      {id:'k8',q:'Password rotation: generates new password → updates Vault → updates K8s Secret → rolling restart (no downtime)',why:'Rotation that requires manual pod restart = downtime. Rolling restart = zero-downtime rotation.',sev:'p1'},
+      {id:'k9',q:'RDS teardown: final snapshot created for production DBs before deletion (staging/dev skip)',why:'Production data deletion without snapshot = permanent data loss. Even if user requests deletion, snapshot is a safety net.',sev:'p1'},
+      {id:'k10',q:'RDS tagged with autostack:project_id before provisioning completes (RULE A4)',why:'Untagged RDS instances cannot be found by infra-teardown. User pays for a ghost database forever.',sev:'p0'},
+      {id:'k11',q:'Cost estimate shown BEFORE provisioning (separate line items: instance + storage + Multi-AZ premium)',why:'Surprise $54/mo DB bill on top of $187/mo cluster = user panic. Always show total before charging.',sev:'p0'},
+    ]
+  },
+  {
+    id:'s12', title:'Section 12 — On-Premise & Enterprise', checkpoint:'Checkpoint #12', cpClass:'cp-enterprise', phase:'Phase 15',
+    items:[
+      {id:'l1',q:'Docker Compose on-prem stack starts with docker-compose up (no manual configuration beyond env file)',why:'If on-prem requires 20 manual steps to start, enterprise IT will not deploy it. Self-service or nothing.',sev:'p0'},
+      {id:'l2',q:'License key verified locally using bundled RSA public key (no network call to autostack.io required)',why:'RULE O2: phone-home defeats the purpose of on-prem. Security-conscious enterprises block outbound SaaS calls.',sev:'p0'},
+      {id:'l3',q:'Invalid license key: control plane refuses to start with clear error (not silent degradation)',why:'Silent degradation on invalid license = enterprise admin has no idea what\'s wrong. Clear error = faster resolution.',sev:'p1'},
+      {id:'l4',q:'Expired license key: service continues working but admin sees warning banner (not hard cutoff at expiry)',why:'Hard cutoff on expiry = customer outage while they process the renewal invoice. Grace period = good faith.',sev:'p1'},
+      {id:'l5',q:'Zero outbound calls to autostack.io during normal operation (verify with network capture)',why:'RULE O2: regulated enterprise customers (HIPAA, FedRAMP) block all outbound SaaS calls by policy.',sev:'p0'},
+      {id:'l6',q:'Agent points to internal control plane URL (not autostack.io) with only URL change in Helm values',why:'If agent needs code changes for on-prem, every agent update has two codepaths to maintain.',sev:'p1'},
+      {id:'l7',q:'Helm chart deploys all components in under 5 minutes on a standard Kubernetes cluster',why:'On-prem installation taking 30+ minutes = enterprise evaluators give up during proof-of-concept.',sev:'p2'},
+      {id:'l8',q:'Data export tool produces encrypted JSON importable on a fresh on-prem instance',why:'SaaS → on-prem migration without data migration = customer must recreate all configurations manually.',sev:'p1'},
+      {id:'l9',q:'Upgrade: docker pull + docker-compose up recreates containers with new image, data persists',why:'Upgrade that requires re-entering all configuration = enterprises skip upgrades = security debt accumulates.',sev:'p1'},
+      {id:'l10',q:'All analytics/error tracking (PostHog, Sentry) disabled OR pointed to customer-controlled instances',why:'RULE O2: PostHog and Sentry send data to their SaaS infrastructure. Enterprise on-prem cannot do this.',sev:'p0'},
+    ]
+  }
+]
+
+let state = {}
+
+function calcSectionScore(sec) {
+  let total=sec.items.length, pass=0, fail=0, warn=0, answered=0
+  sec.items.forEach(i=>{const s=state[i.id]; if(s){answered++;if(s==='pass')pass++;else if(s==='fail')fail++;else if(s==='warn')warn++;}})
+  return {total,pass,fail,warn,answered}
+}
+
+function calcTotal() {
+  let total=0,pass=0,fail=0,p0Fails=0,answered=0
+  SECTIONS.forEach(s=>s.items.forEach(i=>{total++;const st=state[i.id];if(st){answered++;if(st==='pass')pass++;if(st==='fail'){fail++;if(i.sev==='p0')p0Fails++;}}}))
+  return {total,pass,fail,p0Fails,answered,pct:total?Math.round(pass/total*100):0}
+}
+
+function getVerdict(score) {
+  if(score.answered<score.total*0.5) return {cls:'verdict-warn',text:'Answer all items to get your verdict.'}
+  if(score.p0Fails>0) return {cls:'verdict-fail',text:`❌ DO NOT SHIP. ${score.p0Fails} P0 blocker${score.p0Fails>1?'s':''} unresolved. Fix now.`}
+  if(score.fail>2) return {cls:'verdict-fail',text:`❌ NOT READY. ${score.fail} broken items. Too many to ship safely.`}
+  if(score.fail>0) return {cls:'verdict-warn',text:`⚠️ SHIP WITH CAUTION. ${score.fail} item${score.fail>1?'s':''} broken. Fix before scaling.`}
+  if(score.pct>=100) return {cls:'verdict-pass',text:'✅ ALL PHASES READY. Every enterprise checkpoint passed.'}
+  if(score.pct>=80) return {cls:'verdict-pass',text:`✅ LOOKS GOOD. ${score.pct}% passing. Review remaining warnings.`}
+  return {cls:'verdict-warn',text:`⚠️ ${score.pct}% passing. More work needed.`}
+}
+
+function render() {
+  const score = calcTotal()
+  document.getElementById('total-score').textContent = score.answered<score.total*0.5?'—':score.pct+'%'
+  document.getElementById('prog').style.width = score.total ? (score.answered/score.total*100)+'%' : '0%'
+  const v = getVerdict(score)
+  const vb = document.getElementById('verdict-bar')
+  vb.className='verdict-bar '+v.cls
+  vb.textContent=v.text
+  SECTIONS.forEach(sec=>{
+    const sc=calcSectionScore(sec)
+    const el=document.getElementById('score-'+sec.id)
+    if(el){
+      if(sc.answered===0){el.textContent=`0/${sc.total}`;el.style.color=''}
+      else if(sc.fail>0){el.style.color='var(--color-text-danger)';el.textContent=`${sc.pass}/${sc.total} (${sc.fail}❌)`}
+      else if(sc.warn>0){el.style.color='var(--color-text-warning)';el.textContent=`${sc.pass}/${sc.total} (${sc.warn}⚠️)`}
+      else{el.style.color='var(--color-text-success)';el.textContent=`${sc.pass}/${sc.total} ✅`}
+    }
+    sec.items.forEach(item=>{
+      const s=state[item.id]
+      ;['pass','warn','fail'].forEach(t=>{
+        const btn=document.getElementById('btn-'+item.id+'-'+t)
+        if(btn){
+          const active = s===t ? (t==='pass'?'active-pass':t==='warn'?'active-warn':'active-fail') : ''
+          btn.className='status-btn'+(active?' '+active:'')
+        }
+      })
+    })
+  })
+}
+
+function setStatus(id,st){state[id]=st;render()}
+function toggleSection(id){
+  document.getElementById('body-'+id).classList.toggle('open')
+  document.getElementById('chev-'+id).classList.toggle('open')
+}
+function resetAll(){state={};render()}
+function exportReport(){
+  const lines=['# AutoStack Phase 11–15 Enterprise Audit',`Generated: ${new Date().toLocaleString()}`,'']
+  const score=calcTotal()
+  const v=getVerdict(score)
+  lines.push(`## Overall: ${score.pct}% (${score.pass}/${score.total} passing)`,v.text,'')
+  SECTIONS.forEach(sec=>{
+    lines.push(`### ${sec.title}`)
+    sec.items.forEach(item=>{
+      const s=state[item.id]
+      const icon=s==='pass'?'✅':s==='warn'?'⚠️':s==='fail'?'❌':'?'
+      lines.push(`${icon} [${item.sev.toUpperCase()}] ${item.q}`)
+      if(s==='fail'||s==='warn')lines.push(`   Why this matters: ${item.why}`)
+    })
+    lines.push('')
+  })
+  const blob=new Blob([lines.join('\n')],{type:'text/plain'})
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='autostack-phase11-15-audit.md';a.click()
+}
+
+const container=document.getElementById('sections')
+SECTIONS.forEach(sec=>{
+  const div=document.createElement('div')
+  div.className='section'
+  div.innerHTML=`
+    <div class="section-head" onclick="toggleSection('${sec.id}')">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="phase-badge">${sec.phase}</span>
+        <span class="section-title">${sec.title}</span>
+      </div>
+      <div class="section-meta">
+        <span class="checkpoint-badge ${sec.cpClass}">${sec.checkpoint}</span>
+        <span class="section-score" id="score-${sec.id}">0/${sec.items.length}</span>
+        <span class="chevron" id="chev-${sec.id}">▶</span>
+      </div>
+    </div>
+    <div class="section-body" id="body-${sec.id}">
+      ${sec.items.map(item=>`
+        <div class="item">
+          <div class="item-left">
+            <div class="severity-dot sev-${item.sev}"></div>
+            <div>
+              <div class="item-q">${item.q}</div>
+              <div class="item-why">${item.why}</div>
+            </div>
+          </div>
+          <div class="status-group">
+            <button class="status-btn" id="btn-${item.id}-pass" onclick="setStatus('${item.id}','pass')">✅</button>
+            <button class="status-btn" id="btn-${item.id}-warn" onclick="setStatus('${item.id}','warn')">⚠️</button>
+            <button class="status-btn" id="btn-${item.id}-fail" onclick="setStatus('${item.id}','fail')">❌</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `
+  container.appendChild(div)
+})
+
+document.getElementById('body-s8').classList.add('open')
+document.getElementById('chev-s8').classList.add('open')
+render()
+</script>

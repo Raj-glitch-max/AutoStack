@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AutoStack Performance Monitoring</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;500;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;family=Syne:wght@400;500;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#3B82F6",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#07090E",
+                        "surface-dark": "#0C0F17",
+                        "border-dark": "#1F2937",
+                        "text-muted": "#9CA3AF"
+                    },
+                    fontFamily: {
+                        "display": ["DM Sans", "sans-serif"],
+                        "heading": ["Syne", "sans-serif"],
+                        "mono": ["JetBrains Mono", "monospace"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    backgroundImage: {
+                        'grid-pattern': "linear-gradient(to right, #1f2937 1px, transparent 1px), linear-gradient(to bottom, #1f2937 1px, transparent 1px)"
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .grid-bg {
+            background-size: 40px 40px;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display min-h-screen grid-bg bg-grid-pattern relative">
+<div class="absolute inset-0 bg-background-dark/80 z-0 pointer-events-none"></div>
+<div class="relative z-10 flex h-screen overflow-hidden">
+<aside class="w-[220px] bg-surface-dark border-r border-border-dark flex flex-col justify-between shrink-0">
+<div class="flex flex-col gap-6 py-6">
+<div class="flex items-center gap-3 px-6 text-slate-100">
+<div class="text-primary material-symbols-outlined" style="font-size: 28px;">layers</div>
+<h2 class="font-heading font-bold text-xl tracking-tight">AutoStack</h2>
+</div>
+<nav class="flex flex-col gap-1 px-3">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted hover:text-slate-100 hover:bg-white/5 transition-colors" href="#">
+<span class="material-symbols-outlined" style="font-size: 20px;">home</span>
+<span class="text-sm font-medium">Overview</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary" href="#">
+<span class="material-symbols-outlined" style="font-size: 20px; font-variation-settings: 'FILL' 1;">insights</span>
+<span class="text-sm font-medium">Monitoring</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted hover:text-slate-100 hover:bg-white/5 transition-colors" href="#">
+<span class="material-symbols-outlined" style="font-size: 20px;">dns</span>
+<span class="text-sm font-medium">Clusters</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted hover:text-slate-100 hover:bg-white/5 transition-colors" href="#">
+<span class="material-symbols-outlined" style="font-size: 20px;">notifications</span>
+<span class="text-sm font-medium">Alerts</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted hover:text-slate-100 hover:bg-white/5 transition-colors" href="#">
+<span class="material-symbols-outlined" style="font-size: 20px;">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+</nav>
+</div>
+<div class="p-4 border-t border-border-dark">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-border-dark bg-cover bg-center" data-alt="User Avatar" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAlHj0Z9arf77wQ_wdNBZIM4njhzjsX9HwGEXsgmyoEWMxPPLOOy4ZXSi4gqiRIKDcnHPFQZfRCljDtZAm9Ko4tziTu22cG6oJjjz2je2nsNexSlQJtBfpK4SYFTu7RTfJrO9gV76Db2eszrnZejVgQCOTJddpxqh3UafVdzr08pHIhjNIpnGkMOgmDM0HpyVPoyY8UgAylmGvvx1Xd1g9HnzPdIeyzQj_yS9wNUZCdThVH-zUt2C1enlx4H1wpd5KAMPSEdErdAk8');"></div>
+<div class="flex flex-col">
+<span class="text-sm font-medium text-slate-100">John Doe</span>
+<span class="text-xs text-text-muted">Admin</span>
+</div>
+</div>
+</div>
+</aside>
+<main class="flex-1 flex flex-col h-full overflow-hidden">
+<header class="h-[52px] bg-surface-dark/80 backdrop-blur-md border-b border-border-dark flex items-center justify-between px-8 shrink-0 sticky top-0 z-20">
+<div class="flex items-center gap-4">
+<h1 class="font-heading font-semibold text-lg text-slate-100">Performance Monitoring</h1>
+<span class="px-2 py-0.5 rounded bg-primary/20 text-primary text-xs font-mono font-medium">production-cluster-01</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" style="font-size: 18px;">search</span>
+<input class="bg-background-dark border border-border-dark rounded-md py-1.5 pl-9 pr-4 text-sm text-slate-100 placeholder:text-text-muted focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary w-64 transition-shadow" placeholder="Search metrics..." type="text"/>
+</div>
+<button class="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors">
+<span class="material-symbols-outlined" style="font-size: 18px;">download</span>
+                        Export
+                    </button>
+</div>
+</header>
+<div class="flex-1 overflow-y-auto p-8">
+<div class="max-w-[1400px] mx-auto flex flex-col gap-6">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+<div class="bg-surface-dark border border-border-dark rounded-lg p-5 flex flex-col gap-3 relative overflow-hidden group hover:border-border-dark/80 transition-colors">
+<div class="absolute top-0 right-0 w-24 h-24 bg-green-500/5 rounded-full blur-2xl -mr-8 -mt-8"></div>
+<div class="flex justify-between items-start relative z-10">
+<span class="text-sm font-medium text-text-muted">Avg CPU</span>
+<span class="material-symbols-outlined text-text-muted" style="font-size: 20px;">memory</span>
+</div>
+<div class="flex items-end gap-3 relative z-10">
+<span class="font-heading font-extrabold text-3xl text-green-400">34%</span>
+<span class="flex items-center text-xs font-mono font-medium text-green-400 bg-green-400/10 px-1.5 py-0.5 rounded mb-1">
+<span class="material-symbols-outlined" style="font-size: 14px;">arrow_downward</span> 3%
+                                </span>
+</div>
+</div>
+<div class="bg-surface-dark border border-border-dark rounded-lg p-5 flex flex-col gap-3 relative overflow-hidden group hover:border-border-dark/80 transition-colors">
+<div class="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl -mr-8 -mt-8"></div>
+<div class="flex justify-between items-start relative z-10">
+<span class="text-sm font-medium text-text-muted">Avg Memory</span>
+<span class="material-symbols-outlined text-text-muted" style="font-size: 20px;">sd_storage</span>
+</div>
+<div class="flex items-end gap-3 relative z-10">
+<span class="font-heading font-extrabold text-3xl text-amber-400">61%</span>
+<span class="flex items-center text-xs font-mono font-medium text-red-400 bg-red-400/10 px-1.5 py-0.5 rounded mb-1">
+<span class="material-symbols-outlined" style="font-size: 14px;">arrow_upward</span> 2%
+                                </span>
+</div>
+</div>
+<div class="bg-surface-dark border border-border-dark rounded-lg p-5 flex flex-col gap-3 relative overflow-hidden group hover:border-border-dark/80 transition-colors">
+<div class="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full blur-2xl -mr-8 -mt-8"></div>
+<div class="flex justify-between items-start relative z-10">
+<span class="text-sm font-medium text-text-muted">Req/min</span>
+<span class="material-symbols-outlined text-text-muted" style="font-size: 20px;">swap_vert</span>
+</div>
+<div class="flex items-end gap-3 relative z-10">
+<span class="font-heading font-extrabold text-3xl text-blue-400">2,847</span>
+<span class="flex items-center text-xs font-mono font-medium text-green-400 bg-green-400/10 px-1.5 py-0.5 rounded mb-1">
+<span class="material-symbols-outlined" style="font-size: 14px;">arrow_upward</span> 12%
+                                </span>
+</div>
+</div>
+<div class="bg-surface-dark border border-border-dark rounded-lg p-5 flex flex-col gap-3 relative overflow-hidden group hover:border-border-dark/80 transition-colors">
+<div class="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-full blur-2xl -mr-8 -mt-8"></div>
+<div class="flex justify-between items-start relative z-10">
+<span class="text-sm font-medium text-text-muted">p99 Latency</span>
+<span class="material-symbols-outlined text-text-muted" style="font-size: 20px;">speed</span>
+</div>
+<div class="flex items-end gap-3 relative z-10">
+<span class="font-heading font-extrabold text-3xl text-purple-400">124<span class="text-xl">ms</span></span>
+<span class="flex items-center text-xs font-mono font-medium text-green-400 bg-green-400/10 px-1.5 py-0.5 rounded mb-1">
+<span class="material-symbols-outlined" style="font-size: 14px;">arrow_downward</span> 8ms
+                                </span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+<div class="bg-surface-dark border border-border-dark rounded-lg p-6 flex flex-col gap-4">
+<div class="flex justify-between items-center">
+<h3 class="font-medium text-slate-100">CPU Usage</h3>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-green-400"></span>
+<span class="text-xs font-mono text-text-muted">Node Cluster</span>
+</div>
+</div>
+<div class="h-[200px] w-full relative">
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 100 100">
+<defs>
+<lineargradient id="grad-cpu" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#4ade80" stop-opacity="0.2"></stop>
+<stop offset="100%" stop-color="#4ade80" stop-opacity="0"></stop>
+</lineargradient>
+</defs>
+<path d="M0,100 L0,70 Q10,65 20,75 T40,60 T60,70 T80,55 T100,65 L100,100 Z" fill="url(#grad-cpu)"></path>
+<path d="M0,70 Q10,65 20,75 T40,60 T60,70 T80,55 T100,65" fill="none" stroke="#4ade80" stroke-width="2" vector-effect="non-scaling-stroke"></path>
+</svg>
+<div class="absolute bottom-0 left-0 w-full flex justify-between text-[10px] font-mono text-text-muted translate-y-full pt-2">
+<span>08:00</span><span>10:00</span><span>12:00</span><span>14:00</span><span>16:00</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-dark border border-border-dark rounded-lg p-6 flex flex-col gap-4">
+<div class="flex justify-between items-center">
+<h3 class="font-medium text-slate-100">Memory Usage</h3>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-amber-400"></span>
+<span class="text-xs font-mono text-text-muted">Node Cluster</span>
+</div>
+</div>
+<div class="h-[200px] w-full relative">
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 100 100">
+<defs>
+<lineargradient id="grad-mem" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#fbbf24" stop-opacity="0.2"></stop>
+<stop offset="100%" stop-color="#fbbf24" stop-opacity="0"></stop>
+</lineargradient>
+</defs>
+<path d="M0,100 L0,45 Q15,40 30,35 T60,38 T85,32 T100,30 L100,100 Z" fill="url(#grad-mem)"></path>
+<path d="M0,45 Q15,40 30,35 T60,38 T85,32 T100,30" fill="none" stroke="#fbbf24" stroke-width="2" vector-effect="non-scaling-stroke"></path>
+</svg>
+<div class="absolute bottom-0 left-0 w-full flex justify-between text-[10px] font-mono text-text-muted translate-y-full pt-2">
+<span>08:00</span><span>10:00</span><span>12:00</span><span>14:00</span><span>16:00</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-dark border border-border-dark rounded-lg p-6 flex flex-col gap-4">
+<div class="flex justify-between items-center">
+<h3 class="font-medium text-slate-100">Requests / min</h3>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-blue-400"></span>
+<span class="text-xs font-mono text-text-muted">Gateway</span>
+</div>
+</div>
+<div class="h-[200px] w-full relative">
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 100 100">
+<defs>
+<lineargradient id="grad-req" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#60a5fa" stop-opacity="0.2"></stop>
+<stop offset="100%" stop-color="#60a5fa" stop-opacity="0"></stop>
+</lineargradient>
+</defs>
+<path d="M0,100 L0,80 Q20,75 40,50 T60,10 T80,60 T100,70 L100,100 Z" fill="url(#grad-req)"></path>
+<path d="M0,80 Q20,75 40,50 T60,10 T80,60 T100,70" fill="none" stroke="#60a5fa" stroke-width="2" vector-effect="non-scaling-stroke"></path>
+</svg>
+<div class="absolute bottom-0 left-0 w-full flex justify-between text-[10px] font-mono text-text-muted translate-y-full pt-2">
+<span>08:00</span><span>10:00</span><span>12:00</span><span>14:00</span><span>16:00</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-dark border border-border-dark rounded-lg p-6 flex flex-col gap-4">
+<div class="flex justify-between items-center">
+<h3 class="font-medium text-slate-100">Response Latency</h3>
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-purple-400"></span>
+<span class="text-xs font-mono text-text-muted">p99</span>
+</div>
+</div>
+<div class="h-[200px] w-full relative">
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 100 100">
+<defs>
+<lineargradient id="grad-lat" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#c084fc" stop-opacity="0.2"></stop>
+<stop offset="100%" stop-color="#c084fc" stop-opacity="0"></stop>
+</lineargradient>
+</defs>
+<path d="M0,100 L0,85 L20,80 L25,15 L35,85 L60,80 L80,82 L100,78 L100,100 Z" fill="url(#grad-lat)"></path>
+<path d="M0,85 L20,80 L25,15 L35,85 L60,80 L80,82 L100,78" fill="none" stroke="#c084fc" stroke-linejoin="round" stroke-width="2" vector-effect="non-scaling-stroke"></path>
+</svg>
+<div class="absolute bottom-0 left-0 w-full flex justify-between text-[10px] font-mono text-text-muted translate-y-full pt-2">
+<span>08:00</span><span>10:00</span><span>12:00</span><span>14:00</span><span>16:00</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

@@ -224,7 +224,7 @@ export default function ProjectsTab({ cluster }) {
     const [modalOpen, setModalOpen] = useState(false);
 
     // We only fetch projects if a cluster ID is available
-    const { data: projects, loading, refetch } = useProjects(cluster?.id);
+    const { data: projects, loading, error, refetch } = useProjects(cluster?.id);
 
     if (!cluster) {
         return (
@@ -235,6 +235,21 @@ export default function ProjectsTab({ cluster }) {
                         title="No Cluster Connected"
                         description="You need to connect an orchestration cluster before you can deploy projects onto it."
                         action={{ label: 'Connect Cluster', onClick: () => window.location.href = '/onboarding' }}
+                    />
+                </Card>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="animate-fadeIn pb-10">
+                <Card className="bg-[rgba(244,63,94,0.05)] mt-6 border-dashed" style={{ borderColor: 'rgba(244,63,94,0.3)' }}>
+                    <EmptyState
+                        icon={FolderGit2}
+                        title="Failed to Load Services"
+                        description="There was an error fetching your deployments. Please try again."
+                        action={{ label: 'Retry', onClick: () => refetch() }}
                     />
                 </Card>
             </div>

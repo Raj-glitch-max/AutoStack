@@ -1,0 +1,353 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);color:var(--color-text-primary)}
+.wrap{padding:1rem 0}
+.header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.5rem;gap:1rem}
+.header-left h1{font-size:18px;font-weight:500;margin-bottom:4px}
+.header-left p{font-size:13px;color:var(--color-text-secondary);line-height:1.5}
+.score-ring{flex-shrink:0;text-align:center}
+.score-big{font-size:32px;font-weight:500;line-height:1}
+.score-label{font-size:11px;color:var(--color-text-secondary);margin-top:4px}
+.verdict-bar{border-radius:var(--border-radius-md);padding:10px 14px;margin-bottom:1.5rem;font-size:13px;font-weight:500;border:0.5px solid}
+.verdict-pass{background:var(--color-background-success);color:var(--color-text-success);border-color:var(--color-border-success)}
+.verdict-warn{background:var(--color-background-warning);color:var(--color-text-warning);border-color:var(--color-border-warning)}
+.verdict-fail{background:var(--color-background-danger);color:var(--color-text-danger);border-color:var(--color-border-danger)}
+.section{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);margin-bottom:1rem;overflow:hidden}
+.section-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none}
+.section-head:hover{background:var(--color-background-secondary)}
+.section-title{font-size:14px;font-weight:500}
+.section-meta{display:flex;align-items:center;gap:8px}
+.checkpoint-badge{font-size:11px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:4px;padding:2px 7px;color:var(--color-text-secondary)}
+.section-score{font-size:13px;font-weight:500}
+.chevron{font-size:12px;color:var(--color-text-secondary);transition:transform 0.2s}
+.chevron.open{transform:rotate(90deg)}
+.section-body{border-top:0.5px solid var(--color-border-tertiary);display:none}
+.section-body.open{display:block}
+.item{display:grid;grid-template-columns:1fr auto;align-items:start;gap:12px;padding:10px 16px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.item:last-child{border-bottom:none}
+.item-left{display:flex;align-items:flex-start;gap:10px}
+.severity-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.sev-p0{background:#E24B4A}
+.sev-p1{background:#EF9F27}
+.sev-p2{background:#639922}
+.item-text{}
+.item-q{font-size:13px;line-height:1.45}
+.item-why{font-size:11px;color:var(--color-text-secondary);margin-top:3px;line-height:1.4}
+.status-group{display:flex;gap:4px;flex-shrink:0}
+.status-btn{border:0.5px solid var(--color-border-secondary);border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;background:transparent;color:var(--color-text-secondary);transition:all 0.15s;white-space:nowrap}
+.status-btn:hover{background:var(--color-background-secondary)}
+.status-btn.active-pass{background:#EAF3DE;color:#3B6D11;border-color:#639922}
+.status-btn.active-warn{background:#FAEEDA;color:#854F0B;border-color:#EF9F27}
+.status-btn.active-fail{background:#FCEBEB;color:#A32D2D;border-color:#E24B4A}
+.status-btn.active-unk{background:var(--color-background-secondary);color:var(--color-text-secondary);border-color:var(--color-border-secondary)}
+.bottom{margin-top:1.5rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.reset-btn{border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:8px 14px;font-size:13px;cursor:pointer;background:transparent;color:var(--color-text-secondary)}
+.reset-btn:hover{background:var(--color-background-secondary)}
+.export-btn{border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:8px 14px;font-size:13px;cursor:pointer;background:transparent;color:var(--color-text-secondary)}
+.legend{display:flex;gap:12px;margin-top:1rem;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary)}
+.l-dot{width:7px;height:7px;border-radius:50%}
+</style>
+
+<div class="wrap">
+<div class="header">
+  <div class="header-left">
+    <h1>AutoStack — Enterprise Audit Tool</h1>
+    <p>Fill this at every [AUDIT CHECKPOINT #N] marker in the plan.<br>Answer every item with brutal honesty. Partial = broken. Unknown = investigate now.</p>
+  </div>
+  <div class="score-ring">
+    <div class="score-big" id="total-score">—</div>
+    <div class="score-label">ship score</div>
+  </div>
+</div>
+
+<div class="verdict-bar verdict-warn" id="verdict-bar">Answer all items to get your ship verdict.</div>
+
+<div id="sections"></div>
+
+<div class="legend">
+  <div class="legend-item"><div class="l-dot sev-p0"></div> P0 — ship blocker</div>
+  <div class="legend-item"><div class="l-dot sev-p1"></div> P1 — must fix soon</div>
+  <div class="legend-item"><div class="l-dot sev-p2"></div> P2 — improvement</div>
+</div>
+
+<div class="bottom">
+  <button class="reset-btn" onclick="resetAll()">Reset all</button>
+  <button class="export-btn" onclick="exportReport()">Export report ↗</button>
+</div>
+</div>
+
+<script>
+const SECTIONS = [
+  {
+    id:'s1', title:'Section 1 — Auth & Security Foundation', checkpoint:'Checkpoint #1',
+    items:[
+      {id:'a1',q:'CORS OPTIONS handler is the literal FIRST line in every Edge Function — before any auth, any logic',why:'Missing CORS = browser silently blocks all API calls. curl works, users cannot.',sev:'p0'},
+      {id:'a2',q:'auth-hook is REGISTERED in Supabase Dashboard → Authentication → Hooks (not just deployed)',why:'A deployed function that is not registered as an Auth Hook never fires. Users get empty data everywhere.',sev:'p0'},
+      {id:'a3',q:'auth-hook calls updateUserById() and sets org_id in user_metadata after creating org',why:'Without org_id in JWT, every RLS policy evaluates to FALSE. Users see zero data across all tables.',sev:'p0'},
+      {id:'a4',q:'auth-hook handles BOTH email signup AND GitHub OAuth (different event sources, same org creation logic)',why:'GitHub OAuth fires differently. If only email is handled, GitHub users have no org and see nothing.',sev:'p0'},
+      {id:'a5',q:'auth.org_id() helper function exists in the database (verify with SQL query, not just code)',why:'Missing DB function = all RLS policies that reference it fail silently. Cannot detect from code alone.',sev:'p0'},
+      {id:'a6',q:'No SERVICE_ROLE_KEY appears anywhere in /frontend/src/ (run: grep -r "SERVICE_ROLE" src/)',why:'Service role key in frontend bypasses ALL row-level security. Every user can read every org\'s data.',sev:'p0'},
+      {id:'a7',q:'No hardcoded tokens in any source file (run: grep -r "eyJ\\|re_\\|sk-\\|AKIA" src/ supabase/)',why:'Committed keys are permanently exposed even after rotation if the git history exists.',sev:'p0'},
+      {id:'a8',q:'.env.local is in .gitignore AND has never been committed (git log --all -- .env.local = no output)',why:'One accidental commit exposes all service keys. Git history is permanent.',sev:'p0'},
+      {id:'a9',q:'GitHub webhook verifies X-Hub-Signature-256 BEFORE parsing the body or touching the DB',why:'Without HMAC verification, any attacker can POST fake deployment events to your database.',sev:'p0'},
+      {id:'a10',q:'GitHub OAuth callback validates CSRF state before processing (constant-time comparison, one-time use)',why:'Without CSRF protection, an attacker can link your AutoStack org to their GitHub account.',sev:'p0'},
+    ]
+  },
+  {
+    id:'s2', title:'Section 2 — GitHub Integration & Deploy Pipeline', checkpoint:'Checkpoint #2',
+    items:[
+      {id:'b1',q:'GitHub installation token is cached in Redis with 50-minute TTL (never stored in DB, never exposed to frontend)',why:'Tokens in DB get logged, backed up, snapshotted. Redis with TTL is ephemeral by design.',sev:'p0'},
+      {id:'b2',q:'Webhook delivery IDs are deduplicated (GitHub retries on non-200 — without dedup, same event processed twice)',why:'Double-processing a push event = two identical deployments. Costs 2× compute, potentially 2× AWS spend.',sev:'p1'},
+      {id:'b3',q:'Manifest commit messages include [autostack-skip] to prevent infinite webhook loops',why:'AutoStack commits deployment.yaml → GitHub fires push webhook → AutoStack triggers another deploy → infinite loop.',sev:'p0'},
+      {id:'b4',q:'deploy-redeploy: CodeBuild project is REUSED on subsequent deploys (not recreated each time)',why:'Creating a new CodeBuild project on every push costs extra time and eventually hits AWS limits.',sev:'p1'},
+      {id:'b5',q:'Rollback stores previous_image_sha in deployments table (cannot roll back if this is null)',why:'Rollback without a reference image SHA is impossible. User is stuck with broken deployment.',sev:'p1'},
+      {id:'b6',q:'Preview environments use namespace isolation on staging cluster (NOT new EKS cluster per PR)',why:'A new EKS cluster per PR = $73/mo control plane cost per PR. A large team opens 20 PRs = $1460/mo in previews.',sev:'p0'},
+      {id:'b7',q:'Preview environments have auto_destroy_at populated (72h max lifetime)',why:'Forgotten preview namespaces accumulate. Even namespace resources consume memory and IP addresses.',sev:'p1'},
+      {id:'b8',q:'GitHub deployment status posted to commit (green/red checkmark visible in PR)',why:'Without status checks, developers have no idea if their deploy succeeded without checking the dashboard.',sev:'p2'},
+      {id:'b9',q:'Live URL verified after deploy (HTTP GET returns non-500 before marking deployment successful)',why:'ArgoCD "Synced" does not mean the app is actually serving traffic. The pod can crash immediately after sync.',sev:'p1'},
+    ]
+  },
+  {
+    id:'s3', title:'Section 3 — Agent & Telemetry', checkpoint:'Checkpoint #3',
+    items:[
+      {id:'c1',q:'Agent never connects directly to Supabase — only calls Edge Functions via HTTPS',why:'Agent with direct DB access = every cluster operator has raw DB access to all orgs\' data.',sev:'p0'},
+      {id:'c2',q:'Agent registration token marked as used after first call (cannot be reused for registration)',why:'Reusable registration tokens mean anyone who gets the token can register fake agents.',sev:'p1'},
+      {id:'c3',q:'Agent JWT rotation runs 30 minutes before expiry (not on-demand, not manual)',why:'If JWT expires mid-operation, all metric batches and incident reports are dropped silently.',sev:'p1'},
+      {id:'c4',q:'Agent buffers metrics locally if API is unavailable (10 min buffer, then drops — never crashes)',why:'An agent that crashes on API unavailability is useless. Clusters go dark exactly when you need monitoring.',sev:'p1'},
+      {id:'c5',q:'Metrics collected from real metrics-server (verify: cluster_metrics.cpu_pct matches kubectl top pods)',why:'Simulated metrics in MonitoringTab are useless for real cost analysis and COIE scoring.',sev:'p0'},
+      {id:'c6',q:'Event watcher deduplicates incidents (same pod+reason within 5 min = same incident, not two rows)',why:'A crash-looping pod creates 100 K8s events/hour. Without dedup, 100 incidents flood the dashboard.',sev:'p1'},
+      {id:'c7',q:'System namespaces (kube-system, autostack-system) excluded from incident detection and metrics',why:'kube-system pod restarts are normal. Including them creates false incidents.',sev:'p1'},
+      {id:'c8',q:'Helm chart uses minimal RBAC (only get/list/watch on pods, nodes, events — no write permissions)',why:'An agent with write permissions = any cluster compromise becomes a DB compromise.',sev:'p0'},
+      {id:'c9',q:'pod_logs table has pg_cron cleanup (logs older than 24h deleted hourly)',why:'Pod logs at 100 lines/pod × 100 pods × 24h = 240K rows/day. Without cleanup, DB fills in weeks.',sev:'p1'},
+    ]
+  },
+  {
+    id:'s4', title:'Section 4 — AI Intelligence Layer', checkpoint:'Checkpoint #4',
+    items:[
+      {id:'d1',q:'COIE reads real cluster_metrics rows (not hardcoded/simulated values in the Edge Function)',why:'COIE with simulated data gives fake scores. Cost findings with fake dollar amounts are worse than no findings.',sev:'p0'},
+      {id:'d2',q:'COIE inserts rows into findings table after every cycle (verify: SELECT COUNT(*) FROM findings WHERE cluster_id=\'[id]\' increases)',why:'COIE that runs but never writes findings is a no-op. Dashboard shows no data.',sev:'p0'},
+      {id:'d3',q:'COIE updates cluster health scores in both clusters table AND cluster_scores time-series table',why:'Missing cluster_scores rows = MonitoringTab history chart is empty. Missing clusters update = Overview shows stale score.',sev:'p1'},
+      {id:'d4',q:'AIRE is triggered by real K8s events from the agent (not just manual DB inserts for testing)',why:'An AIRE that only works when you manually insert rows is a demo, not a production system.',sev:'p0'},
+      {id:'d5',q:'AIRE updates incident.root_cause, incident.immediate_action, incident.permanent_fix (not null after diagnosis)',why:'An incident with status=\'diagnosed\' but null RCA fields is useless. Users see "diagnosed" but no guidance.',sev:'p0'},
+      {id:'d6',q:'AIRE calls send-notification after successful diagnosis',why:'Silent AIRE defeats the purpose. Incidents need to notify someone.',sev:'p1'},
+      {id:'d7',q:'incident_patterns table has 10+ rows seeded (verify: SELECT COUNT(*) FROM incident_patterns)',why:'AIRE with zero patterns matches nothing. Every incident stays in \'detected\' state forever.',sev:'p0'},
+      {id:'d8',q:'pg_cron schedule exists for COIE auto-run (verify: SELECT * FROM cron.job WHERE jobname=\'coie-evaluation\')',why:'COIE that only runs on manual trigger is never automatic. Scores update only when someone calls the API.',sev:'p1'},
+      {id:'d9',q:'AIRE auto-remediation opens a real GitHub PR (not just updating a DB field with pr_url=null)',why:'Auto-remediation that never opens a PR is smoke and mirrors. The incident stays unfixed.',sev:'p1'},
+    ]
+  },
+  {
+    id:'s5', title:'Section 5 — Security & Data Integrity', checkpoint:'Checkpoint #5',
+    items:[
+      {id:'e1',q:'Secret env vars stored in Supabase Vault (DATABASE_URL, *_KEY, *_SECRET, *_TOKEN)',why:'Plaintext secrets in the projects table get included in DB backups, exports, and admin queries.',sev:'p0'},
+      {id:'e2',q:'Frontend NEVER receives decrypted secret values — only { key, is_secret: true } for secrets',why:'If the UI can display the raw DATABASE_URL, any XSS attack harvests every credential.',sev:'p0'},
+      {id:'e3',q:'Rate limiting applied to all Edge Functions (test: exceed limit → 429 with Retry-After)',why:'Without rate limiting, a bad actor can exhaust your Supabase Edge Function quota in minutes.',sev:'p0'},
+      {id:'e4',q:'Rate limit keys in Redis have TTL (redis.ttl(\'rl:die-analyze:[org]\') > 0)',why:'Rate limit keys without TTL never expire. After the window, the count stays high = permanent lockout.',sev:'p0'},
+      {id:'e5',q:'Input validation on all Edge Functions — invalid inputs return 400 with field-level errors',why:'No validation = SQL injection, oversized payloads, type confusion. All preventable.',sev:'p1'},
+      {id:'e6',q:'Audit log records: signup, credential verify, deploy, teardown, member invite, incident detected',why:'Without audit log, enterprise compliance is impossible. SOC2 auditors need this log.',sev:'p1'},
+      {id:'e7',q:'All AWS resources tagged (autostack:project_id) before being used (not after)',why:'A resource created before tagging that fails immediately = untagged orphan. infra-teardown cannot find it.',sev:'p0'},
+      {id:'e8',q:'STS AssumeRole uses ExternalId=org_id on every call',why:'Without ExternalId, confused deputy attack possible. An attacker tricks AutoStack into assuming their victim\'s role.',sev:'p0'},
+      {id:'e9',q:'AWS temporary credentials held in memory only — never written to DB or logs',why:'Credentials in DB = permanent exposure. IAM credentials in logs = searchable exposure.',sev:'p0'},
+      {id:'e10',q:'Every Supabase realtime subscription returns cleanup function (grep useEffect cleanup in all hooks)',why:'Missing cleanup = subscription leak. 10 tab switches = 10 duplicate subscriptions. Performance degrades.',sev:'p1'},
+    ]
+  },
+  {
+    id:'s6', title:'Section 6 — Performance & Caching', checkpoint:'Checkpoint #6',
+    items:[
+      {id:'f1',q:'ui/index.jsx split into individual component files (no single file > 500 lines in /ui/)',why:'10K line monolith defeats React.lazy(). All component code loads on first render regardless of lazy imports.',sev:'p1'},
+      {id:'f2',q:'Landing page does NOT load dashboard component chunks (verify: Chrome DevTools Network on /)',why:'Marketing page loading 500KB of dashboard code kills First Contentful Paint. Users bounce.',sev:'p1'},
+      {id:'f3',q:'Sentry loads lazily — not on landing page (error-tracking-*.js chunk absent from / page load)',why:'Sentry SDK = 450KB. Loading it on the landing page blocks First Contentful Paint unnecessarily.',sev:'p1'},
+      {id:'f4',q:'TanStack Query installed — tab switches use cache (verify: no new Network requests on second tab visit)',why:'Without caching, every tab switch = Supabase API call. Dashboard feels slow. Free tier quota burns faster.',sev:'p1'},
+      {id:'f5',q:'No Seq Scans on tables with > 1000 rows (run: SELECT * FROM pg_stat_user_tables WHERE seq_scan > idx_scan AND n_live_tup > 1000 → empty)',why:'Full table scans at 1M rows take seconds. Dashboard appears frozen. Supabase rate limits on slow queries.',sev:'p0'},
+      {id:'f6',q:'All DB queries have .limit() clause (grep "\.from\(" supabase/functions/ | check for missing .limit())',why:'Unbounded query on cluster_metrics at 1M rows = timeout, quota exhaustion, $$ in Supabase bandwidth.',sev:'p0'},
+      {id:'f7',q:'cluster_metrics and cluster_scores indexes exist: idx_cluster_metrics_time, idx_cluster_scores_time',why:'These are the highest-frequency queries. Without index, every chart render does a full table scan.',sev:'p0'},
+      {id:'f8',q:'Lighthouse Performance score on landing page > 80 (run 3 times, take median)',why:'Score < 80 = real users on mobile notice slowness. Google ranks slow pages lower in search.',sev:'p2'},
+    ]
+  },
+  {
+    id:'s7', title:'Section 7 — End-to-End & Launch Readiness', checkpoint:'Checkpoint #7 (GO/NO-GO)',
+    items:[
+      {id:'g1',q:'Happy path completes in < 15 minutes: signup → IAM verify → deploy Node.js app → live URL',why:'This is the product. If the product doesn\'t work end-to-end, nothing else matters.',sev:'p0'},
+      {id:'g2',q:'Auto-redeploy works: push to connected repo → new deployment within 3 minutes',why:'Without auto-redeploy, every code change requires manual action. Core value prop broken.',sev:'p0'},
+      {id:'g3',q:'Rollback works: click rollback on any deployment → previous image live within 3 minutes',why:'Rollback is the escape hatch. If it doesn\'t work, a bad deploy = hours of downtime.',sev:'p0'},
+      {id:'g4',q:'Teardown removes ALL AWS resources (verify: 0 resources with autostack:project_id tag after teardown)',why:'Orphaned resources = ongoing AWS charges in the user\'s account. This causes chargebacks and churn.',sev:'p0'},
+      {id:'g5',q:'Plan limits enforced at Edge Function layer (free user cannot create 2nd environment)',why:'Frontend enforcement is bypassable with curl. Edge Function enforcement is not.',sev:'p1'},
+      {id:'g6',q:'Email notifications received for: deployment_live, deployment_failed, incident_detected',why:'Silent system = users don\'t trust it. Notifications are how users know AutoStack is working.',sev:'p1'},
+      {id:'g7',q:'Demo mode works for college presentation (DEMO_MODE=true → 30s onboarding, no real AWS)',why:'College panel test requires a working demo. Real AWS provisioning won\'t work in a classroom presentation.',sev:'p1'},
+      {id:'g8',q:'All 7 audit checkpoints above are 100% green before merging to main',why:'Shipping with known ❌ items is not shipping. It is accumulating technical debt that will hurt at scale.',sev:'p0'},
+      {id:'g9',q:'Supabase project on Pro plan (not free tier) for production',why:'Free tier: no daily backups, 500MB DB, limited connections. One spike kills the app.',sev:'p1'},
+      {id:'g10',q:'No bare console.log in production Edge Function or frontend code',why:'console.log leaks email IDs, user data, internal IDs into Supabase logs which may be accessed by support staff.',sev:'p1'},
+    ]
+  }
+]
+
+let state = {}
+
+function getItemClass(status) {
+  if(status==='pass') return 'active-pass'
+  if(status==='warn') return 'active-warn'
+  if(status==='fail') return 'active-fail'
+  if(status==='unk') return 'active-unk'
+  return ''
+}
+
+function calcSectionScore(section) {
+  const items = section.items
+  let answered=0, pass=0, fail=0, warn=0
+  items.forEach(item=>{
+    const s = state[item.id]
+    if(s){ answered++
+      if(s==='pass') pass++
+      else if(s==='fail') fail++
+      else if(s==='warn') warn++
+    }
+  })
+  return {answered, pass, fail, warn, total:items.length}
+}
+
+function calcTotalScore() {
+  let totalItems=0, passItems=0, failItems=0, p0Fails=0
+  SECTIONS.forEach(sec=>{
+    sec.items.forEach(item=>{
+      totalItems++
+      const s=state[item.id]
+      if(s==='pass') passItems++
+      if(s==='fail'){
+        failItems++
+        if(item.sev==='p0') p0Fails++
+      }
+    })
+  })
+  return {totalItems, passItems, failItems, p0Fails,
+    answeredItems: Object.keys(state).length,
+    pct: totalItems ? Math.round(passItems/totalItems*100) : 0}
+}
+
+function getVerdict(score) {
+  if(score.answeredItems < score.totalItems*0.5) return {cls:'verdict-warn',text:'Answer all items to get your ship verdict.'}
+  if(score.p0Fails > 0) return {cls:'verdict-fail',text:`❌ DO NOT SHIP. ${score.p0Fails} P0 blocker${score.p0Fails>1?'s':''} unresolved. Fix them first.`}
+  if(score.failItems > 3) return {cls:'verdict-fail',text:`❌ NOT READY. ${score.failItems} broken items — too many to ship safely.`}
+  if(score.failItems > 0) return {cls:'verdict-warn',text:`⚠️ SHIP WITH CAUTION. ${score.failItems} item${score.failItems>1?'s':''} broken. Fix before scaling.`}
+  if(score.pct >= 100) return {cls:'verdict-pass',text:'✅ READY TO SHIP. All items verified. Merge to main.'}
+  if(score.pct >= 80) return {cls:'verdict-pass',text:`✅ LOOKS GOOD. ${score.pct}% passing. Review remaining warnings.`}
+  return {cls:'verdict-warn',text:`⚠️ ${score.pct}% passing. More work needed before this is production.`}
+}
+
+function render() {
+  const score = calcTotalScore()
+  const answered = score.answeredItems
+  const total = score.totalItems
+
+  document.getElementById('total-score').textContent = answered < total*0.5 ? '?' : score.pct+'%'
+  const verdict = getVerdict(score)
+  const vb = document.getElementById('verdict-bar')
+  vb.className = 'verdict-bar '+verdict.cls
+  vb.textContent = verdict.text
+
+  SECTIONS.forEach(sec=>{
+    const sc = calcSectionScore(sec)
+    const scoreEl = document.getElementById('score-'+sec.id)
+    if(scoreEl) {
+      if(sc.answered===0) scoreEl.textContent = `0/${sc.total}`
+      else if(sc.fail>0) scoreEl.style.color='var(--color-text-danger)', scoreEl.textContent = `${sc.pass}/${sc.total} (${sc.fail} ❌)`
+      else if(sc.warn>0) scoreEl.style.color='var(--color-text-warning)', scoreEl.textContent = `${sc.pass}/${sc.total} (${sc.warn} ⚠️)`
+      else scoreEl.style.color='var(--color-text-success)', scoreEl.textContent = `${sc.pass}/${sc.total} ✅`
+    }
+
+    sec.items.forEach(item=>{
+      const s = state[item.id]
+      ;['pass','warn','fail','unk'].forEach(t=>{
+        const btn = document.getElementById('btn-'+item.id+'-'+t)
+        if(btn){
+          btn.className = 'status-btn' + (s===t ? ' '+getItemClass(t) : '')
+        }
+      })
+    })
+  })
+}
+
+function setStatus(itemId, status) {
+  state[itemId] = status
+  render()
+}
+
+function toggleSection(secId) {
+  const body = document.getElementById('body-'+secId)
+  const chev = document.getElementById('chev-'+secId)
+  body.classList.toggle('open')
+  chev.classList.toggle('open')
+}
+
+function resetAll() {
+  state = {}
+  render()
+}
+
+function exportReport() {
+  const lines = ['# AutoStack Enterprise Audit Report', `Generated: ${new Date().toLocaleString()}`, '']
+  const score = calcTotalScore()
+  const verdict = getVerdict(score)
+  lines.push(`## Overall: ${score.pct}% (${score.passItems}/${score.totalItems} items passing)`)
+  lines.push(verdict.text, '')
+
+  SECTIONS.forEach(sec=>{
+    lines.push(`### ${sec.title}`)
+    sec.items.forEach(item=>{
+      const s = state[item.id]
+      const icon = s==='pass'?'✅':s==='warn'?'⚠️':s==='fail'?'❌':'?'
+      lines.push(`${icon} [${item.sev.toUpperCase()}] ${item.q}`)
+      if(s==='fail'||s==='warn') lines.push(`   → Why this matters: ${item.why}`)
+    })
+    lines.push('')
+  })
+
+  const blob = new Blob([lines.join('\n')], {type:'text/plain'})
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = 'autostack-audit-report.md'
+  a.click()
+}
+
+// Build DOM
+const container = document.getElementById('sections')
+SECTIONS.forEach(sec=>{
+  const div = document.createElement('div')
+  div.className = 'section'
+  div.innerHTML = `
+    <div class="section-head" onclick="toggleSection('${sec.id}')">
+      <span class="section-title">${sec.title}</span>
+      <div class="section-meta">
+        <span class="checkpoint-badge">${sec.checkpoint}</span>
+        <span class="section-score" id="score-${sec.id}">0/${sec.items.length}</span>
+        <span class="chevron" id="chev-${sec.id}">▶</span>
+      </div>
+    </div>
+    <div class="section-body" id="body-${sec.id}">
+      ${sec.items.map(item=>`
+        <div class="item">
+          <div class="item-left">
+            <div class="severity-dot sev-${item.sev}"></div>
+            <div class="item-text">
+              <div class="item-q">${item.q}</div>
+              <div class="item-why">${item.why}</div>
+            </div>
+          </div>
+          <div class="status-group">
+            <button class="status-btn" id="btn-${item.id}-pass" onclick="setStatus('${item.id}','pass')">✅</button>
+            <button class="status-btn" id="btn-${item.id}-warn" onclick="setStatus('${item.id}','warn')">⚠️</button>
+            <button class="status-btn" id="btn-${item.id}-fail" onclick="setStatus('${item.id}','fail')">❌</button>
+            <button class="status-btn" id="btn-${item.id}-unk" onclick="setStatus('${item.id}','unk')">?</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `
+  container.appendChild(div)
+})
+
+// Open first section by default
+document.getElementById('body-s1').classList.add('open')
+document.getElementById('chev-s1').classList.add('open')
+render()
+</script>

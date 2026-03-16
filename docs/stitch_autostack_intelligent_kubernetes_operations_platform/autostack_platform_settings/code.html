@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AutoStack Platform Settings</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2463eb",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#07090E",
+                        "surface": "#0C0F17",
+                        "border-subtle": "#1C2235",
+                        "text-main": "#f8fafc",
+                        "text-muted": "#94a3b8"
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "mono": ["JetBrains Mono", "monospace"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "1rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display min-h-screen antialiased flex flex-col overflow-x-hidden">
+<div class="flex h-screen w-full flex-col overflow-hidden">
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-border-subtle bg-surface px-6 py-3 shrink-0">
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-3 text-text-main">
+<div class="w-6 h-6 flex items-center justify-center rounded bg-primary/20 text-primary">
+<span class="material-symbols-outlined text-[18px]">layers</span>
+</div>
+<h2 class="text-text-main text-lg font-bold leading-tight tracking-tight">AutoStack</h2>
+</div>
+<label class="flex flex-col min-w-40 h-9 max-w-64 ml-4">
+<div class="flex w-full flex-1 items-stretch rounded-lg h-full border border-border-subtle bg-background-dark overflow-hidden focus-within:border-primary/50 transition-colors">
+<div class="text-text-muted flex items-center justify-center pl-3">
+<span class="material-symbols-outlined text-[18px]">search</span>
+</div>
+<input class="w-full bg-transparent text-text-main border-none focus:ring-0 placeholder:text-text-muted px-2 text-sm font-normal" placeholder="Search resources..." value=""/>
+<div class="flex items-center pr-2">
+<kbd class="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-medium text-text-muted bg-surface rounded border border-border-subtle">⌘K</kbd>
+</div>
+</div>
+</label>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4 hidden md:flex">
+<a class="text-text-muted hover:text-text-main transition-colors text-sm font-medium" href="#">Documentation</a>
+<a class="text-text-muted hover:text-text-main transition-colors text-sm font-medium" href="#">Support</a>
+</div>
+<div class="h-5 w-px bg-border-subtle mx-2 hidden md:block"></div>
+<button class="text-text-muted hover:text-text-main transition-colors relative">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 rounded-full bg-primary border-2 border-surface"></span>
+</button>
+<div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-xs font-bold text-white shadow-sm ring-2 ring-surface cursor-pointer" data-alt="User Avatar">
+                JD
+            </div>
+</div>
+</header>
+<div class="flex flex-1 overflow-hidden">
+<!-- Global Sidebar -->
+<div class="w-[220px] shrink-0 border-r border-border-subtle bg-surface flex flex-col justify-between py-4 overflow-y-auto hidden md:flex">
+<div class="flex flex-col px-3 gap-1">
+<div class="px-3 pb-2 mb-2 border-b border-border-subtle">
+<p class="text-xs font-semibold text-text-muted uppercase tracking-wider">Main</p>
+</div>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-text-muted hover:text-text-main hover:bg-background-dark transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:text-primary transition-colors">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-text-muted hover:text-text-main hover:bg-background-dark transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:text-primary transition-colors">rocket_launch</span>
+<span class="text-sm font-medium">Deployments</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-text-muted hover:text-text-main hover:bg-background-dark transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:text-primary transition-colors">dns</span>
+<span class="text-sm font-medium">Services</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-text-muted hover:text-text-main hover:bg-background-dark transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:text-primary transition-colors">memory</span>
+<span class="text-sm font-medium">Infrastructure</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-text-muted hover:text-text-main hover:bg-background-dark transition-colors group" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:text-primary transition-colors">monitoring</span>
+<span class="text-sm font-medium">Metrics</span>
+</a>
+</div>
+<div class="flex flex-col px-3 gap-1 mt-auto">
+<div class="px-3 py-2 border-t border-border-subtle mt-4"></div>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 text-primary font-medium group" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span class="text-sm">Settings</span>
+</a>
+</div>
+</div>
+<!-- Secondary Settings Sidebar -->
+<div class="w-[200px] shrink-0 border-r border-border-subtle bg-background-dark flex flex-col py-6 overflow-y-auto hidden lg:flex">
+<div class="px-5 mb-4">
+<h3 class="text-base font-semibold text-text-main">Settings</h3>
+<p class="text-xs text-text-muted mt-1">Manage workspace</p>
+</div>
+<div class="flex flex-col px-2 gap-0.5">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-surface text-text-main border border-border-subtle shadow-sm font-medium" href="#credentials">
+<span class="material-symbols-outlined text-[18px] text-primary">key</span>
+<span class="text-sm">Credentials</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-text-muted hover:text-text-main hover:bg-surface transition-colors" href="#integrations">
+<span class="material-symbols-outlined text-[18px]">extension</span>
+<span class="text-sm">Integrations</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-text-muted hover:text-text-main hover:bg-surface transition-colors" href="#notifications">
+<span class="material-symbols-outlined text-[18px]">notifications_active</span>
+<span class="text-sm">Notifications</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-text-muted hover:text-text-main hover:bg-surface transition-colors" href="#team">
+<span class="material-symbols-outlined text-[18px]">group</span>
+<span class="text-sm">Team &amp; Access</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-text-muted hover:text-text-main hover:bg-surface transition-colors" href="#billing">
+<span class="material-symbols-outlined text-[18px]">credit_card</span>
+<span class="text-sm">Billing</span>
+</a>
+</div>
+</div>
+<!-- Main Content Area -->
+<div class="flex-1 bg-background-dark overflow-y-auto">
+<div class="max-w-[800px] mx-auto p-6 lg:p-10 flex flex-col gap-10">
+<div class="flex items-center justify-between">
+<div>
+<h1 class="text-2xl font-bold text-text-main tracking-tight">Workspace Settings</h1>
+<p class="text-sm text-text-muted mt-1">Configure your AutoStack environment and integrations.</p>
+</div>
+<button class="h-9 px-4 bg-primary hover:bg-primary/90 text-white text-sm font-semibold rounded-lg shadow-sm shadow-primary/20 transition-all focus:ring-2 focus:ring-primary/50 focus:outline-none flex items-center gap-2">
+<span>Save changes</span>
+</button>
+</div>
+<!-- 1. Cloud Credentials -->
+<section class="flex flex-col gap-4 scroll-mt-6" id="credentials">
+<div>
+<h2 class="text-lg font-semibold text-text-main flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px] text-text-muted">cloud</span>
+                            Cloud Credentials
+                        </h2>
+<p class="text-sm text-text-muted mt-1">Manage your connected cloud provider accounts.</p>
+</div>
+<div class="rounded-xl border border-border-subtle bg-surface overflow-hidden">
+<div class="p-5 flex flex-col sm:flex-row gap-5 items-start sm:items-center justify-between">
+<div class="flex items-start gap-4">
+<div class="w-12 h-12 rounded-lg bg-[#FF9900]/10 flex items-center justify-center shrink-0 border border-[#FF9900]/20">
+<span class="material-symbols-outlined text-[#FF9900] text-[24px]">cloud_done</span>
+</div>
+<div>
+<div class="flex items-center gap-3 mb-1">
+<h3 class="text-base font-bold text-text-main">Production AWS Account</h3>
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5"></span>
+                                            Connected
+                                        </span>
+</div>
+<div class="flex flex-col gap-1 mt-2 text-xs font-mono text-text-muted">
+<div class="flex items-center gap-2"><span class="text-slate-500 w-16">Account:</span> <span class="text-slate-300">123456789012</span></div>
+<div class="flex items-center gap-2"><span class="text-slate-500 w-16">Region:</span> <span class="text-slate-300">us-east-1</span></div>
+<div class="flex items-center gap-2"><span class="text-slate-500 w-16">Role ARN:</span> <span class="text-slate-300 truncate max-w-[200px] sm:max-w-xs" title="arn:aws:iam::123456789012:role/autostack-role">arn:aws:iam::12345678...autostack-role</span></div>
+</div>
+</div>
+</div>
+<div class="flex gap-2 w-full sm:w-auto mt-4 sm:mt-0">
+<button class="flex-1 sm:flex-none h-8 px-3 rounded-md border border-border-subtle bg-background-dark hover:bg-border-subtle text-text-main text-xs font-medium transition-colors flex items-center justify-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">sync</span> Sync
+                                </button>
+<button class="flex-1 sm:flex-none h-8 px-3 rounded-md border border-border-subtle bg-background-dark hover:bg-border-subtle text-text-main text-xs font-medium transition-colors flex items-center justify-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">edit</span> Edit
+                                </button>
+</div>
+</div>
+<div class="border-t border-border-subtle bg-background-dark/50 px-5 py-3 flex items-center justify-between">
+<span class="text-xs text-text-muted">Last synced: 2 hours ago</span>
+<button class="text-xs text-primary hover:text-primary/80 font-medium">Add another account</button>
+</div>
+</div>
+</section>
+<hr class="border-border-subtle"/>
+<!-- 2. Integrations -->
+<section class="flex flex-col gap-4 scroll-mt-6" id="integrations">
+<div>
+<h2 class="text-lg font-semibold text-text-main flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px] text-text-muted">extension</span>
+                            Integrations
+                        </h2>
+<p class="text-sm text-text-muted mt-1">Connect your tools to enable seamless workflows.</p>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<!-- GitHub -->
+<div class="rounded-xl border border-border-subtle bg-surface p-4 flex flex-col gap-4">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center shrink-0">
+<svg aria-hidden="true" class="fill-slate-900" data-view-component="true" height="24" version="1.1" viewbox="0 0 16 16" width="24">
+<path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"></path>
+</svg>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-text-main">GitHub</h3>
+<p class="text-xs text-text-muted line-clamp-1">Source code &amp; CI/CD</p>
+</div>
+</div>
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                    Connected
+                                </span>
+</div>
+<button class="w-full h-8 rounded-md border border-border-subtle bg-background-dark hover:bg-border-subtle text-text-main text-xs font-medium transition-colors">
+                                Configure
+                            </button>
+</div>
+<!-- Slack -->
+<div class="rounded-xl border border-border-subtle bg-surface p-4 flex flex-col gap-4">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center shrink-0">
+<svg fill="none" height="24" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
+<path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313z" fill="#E01E5A"></path>
+<path d="M8.835 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.835 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.835zM8.835 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.313z" fill="#36C5F0"></path>
+<path d="M18.956 8.835a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.835a2.528 2.528 0 0 1-2.522 2.52h-2.522v-2.52zM17.686 8.835a2.528 2.528 0 0 1-2.521 2.52 2.527 2.527 0 0 1-2.522-2.52V2.522A2.528 2.528 0 0 1 15.165 0a2.528 2.528 0 0 1 2.521 2.522v6.313z" fill="#2EB67D"></path>
+<path d="M15.165 18.956a2.528 2.528 0 0 1 2.521 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.687a2.528 2.528 0 0 1-2.52-2.522 2.528 2.528 0 0 1 2.52-2.521h6.313A2.528 2.528 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.522h-6.313z" fill="#ECB22E"></path>
+</svg>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-text-main">Slack</h3>
+<p class="text-xs text-text-muted line-clamp-1">Chatops &amp; Alerts</p>
+</div>
+</div>
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                    Connected
+                                </span>
+</div>
+<button class="w-full h-8 rounded-md border border-border-subtle bg-background-dark hover:bg-border-subtle text-text-main text-xs font-medium transition-colors">
+                                Configure
+                            </button>
+</div>
+<!-- Datadog -->
+<div class="rounded-xl border border-border-subtle bg-surface p-4 flex flex-col gap-4 opacity-70 hover:opacity-100 transition-opacity">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-[#632CA6]/10 flex items-center justify-center shrink-0 border border-[#632CA6]/20">
+<span class="material-symbols-outlined text-[#632CA6] text-[20px]">troubleshoot</span>
+</div>
+<div>
+<h3 class="text-sm font-semibold text-text-main">Datadog</h3>
+<p class="text-xs text-text-muted line-clamp-1">Observability</p>
+</div>
+</div>
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-slate-500/10 text-slate-400 border border-slate-500/20">
+                                    Disconnected
+                                </span>
+</div>
+<button class="w-full h-8 rounded-md bg-white text-slate-900 hover:bg-slate-200 text-xs font-semibold transition-colors">
+                                Connect
+                            </button>
+</div>
+</div>
+</section>
+<hr class="border-border-subtle"/>
+<!-- 3. Notifications -->
+<section class="flex flex-col gap-4 scroll-mt-6" id="notifications">
+<div>
+<h2 class="text-lg font-semibold text-text-main flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px] text-text-muted">notifications_active</span>
+                            Notifications
+                        </h2>
+<p class="text-sm text-text-muted mt-1">Configure when and where you want to be alerted.</p>
+</div>
+<div class="rounded-xl border border-border-subtle bg-surface overflow-hidden divide-y divide-border-subtle">
+<div class="p-4 sm:p-5 flex items-center justify-between gap-4">
+<div>
+<h3 class="text-sm font-medium text-text-main">Deployments</h3>
+<p class="text-xs text-text-muted mt-0.5">Notify when a deployment succeeds or fails.</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer shrink-0">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-9 h-5 bg-background-dark border border-border-subtle peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary peer-checked:border-primary"></div>
+</label>
+</div>
+<div class="p-4 sm:p-5 flex items-center justify-between gap-4">
+<div>
+<h3 class="text-sm font-medium text-text-main">Incidents</h3>
+<p class="text-xs text-text-muted mt-0.5">Critical alerts for service downtime or errors.</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer shrink-0">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-9 h-5 bg-background-dark border border-border-subtle peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary peer-checked:border-primary"></div>
+</label>
+</div>
+<div class="p-4 sm:p-5 flex items-center justify-between gap-4">
+<div>
+<h3 class="text-sm font-medium text-text-main">Health Score Changes</h3>
+<p class="text-xs text-text-muted mt-0.5">Weekly summaries and significant changes in service health.</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer shrink-0">
+<input class="sr-only peer" type="checkbox" value=""/>
+<div class="w-9 h-5 bg-background-dark border border-border-subtle peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary peer-checked:border-primary"></div>
+</label>
+</div>
+</div>
+</section>
+<hr class="border-border-subtle"/>
+<!-- 4. Team & Access -->
+<section class="flex flex-col gap-4 scroll-mt-6 pb-10" id="team">
+<div class="flex items-center justify-between">
+<div>
+<h2 class="text-lg font-semibold text-text-main flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px] text-text-muted">group</span>
+                                Team &amp; Access
+                            </h2>
+<p class="text-sm text-text-muted mt-1">Manage who has access to this workspace.</p>
+</div>
+<button class="h-8 px-3 rounded-md border border-border-subtle bg-surface hover:bg-border-subtle text-text-main text-xs font-medium transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">person_add</span> Invite
+                        </button>
+</div>
+<div class="rounded-xl border border-border-subtle bg-surface overflow-hidden">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-border-subtle bg-background-dark/50 text-xs font-medium text-text-muted uppercase tracking-wider">
+<th class="px-5 py-3 font-medium">User</th>
+<th class="px-5 py-3 font-medium hidden sm:table-cell">Status</th>
+<th class="px-5 py-3 font-medium text-right">Role</th>
+<th class="px-5 py-3 w-10"></th>
+</tr>
+</thead>
+<tbody class="divide-y divide-border-subtle text-sm">
+<tr class="hover:bg-background-dark/30 transition-colors group">
+<td class="px-5 py-3">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-xs font-bold text-white shrink-0" data-alt="User Avatar">JD</div>
+<div class="flex flex-col">
+<span class="font-medium text-text-main">Jane Doe</span>
+<span class="text-xs text-text-muted">jane@example.com</span>
+</div>
+</div>
+</td>
+<td class="px-5 py-3 hidden sm:table-cell">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-400">Active</span>
+</td>
+<td class="px-5 py-3 text-right">
+<span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-primary/10 text-primary border border-primary/20">Owner</span>
+</td>
+<td class="px-5 py-3 text-right">
+<button class="text-text-muted hover:text-text-main opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-background-dark/30 transition-colors group">
+<td class="px-5 py-3">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center text-xs font-bold text-white shrink-0" data-alt="User Avatar">AS</div>
+<div class="flex flex-col">
+<span class="font-medium text-text-main">Alex Smith</span>
+<span class="text-xs text-text-muted">alex@example.com</span>
+</div>
+</div>
+</td>
+<td class="px-5 py-3 hidden sm:table-cell">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-500/10 text-emerald-400">Active</span>
+</td>
+<td class="px-5 py-3 text-right">
+<span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-surface border border-border-subtle text-text-muted">Admin</span>
+</td>
+<td class="px-5 py-3 text-right">
+<button class="text-text-muted hover:text-text-main opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-background-dark/30 transition-colors group">
+<td class="px-5 py-3">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-gradient-to-bl from-orange-400 to-rose-400 flex items-center justify-center text-xs font-bold text-white shrink-0" data-alt="User Avatar">TJ</div>
+<div class="flex flex-col">
+<span class="font-medium text-text-main">Taylor Jones</span>
+<span class="text-xs text-text-muted">taylor@example.com</span>
+</div>
+</div>
+</td>
+<td class="px-5 py-3 hidden sm:table-cell">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-amber-500/10 text-amber-400">Invited</span>
+</td>
+<td class="px-5 py-3 text-right">
+<span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-surface border border-border-subtle text-text-muted">Developer</span>
+</td>
+<td class="px-5 py-3 text-right">
+<button class="text-text-muted hover:text-text-main opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</div>
+</div>
+</div>
+</div>
+</body></html>

@@ -7,7 +7,7 @@ import { usePipelines } from '../../hooks/useData';
 const stageNames = ['Build', 'Test', 'Security', 'QA Deck', 'Production'];
 
 export default function PipelinesTab({ cluster }) {
-    const { data: pipelines, loading, refetch } = usePipelines(cluster?.id);
+    const { data: pipelines, loading, error, refetch } = usePipelines(cluster?.id);
 
     const getStatusColor = (status) => {
         switch (status?.toLowerCase()) {
@@ -28,6 +28,21 @@ export default function PipelinesTab({ cluster }) {
                         title="No Cluster Connected"
                         description="Connect a cluster to view CI/CD pipeline deployments."
                         action={{ label: 'Connect Cluster', onClick: () => window.location.href = '/onboarding' }}
+                    />
+                </Card>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="animate-fadeIn pb-10">
+                <Card className="bg-[rgba(244,63,94,0.05)] mt-6 border-dashed" style={{ borderColor: 'rgba(244,63,94,0.3)' }}>
+                    <EmptyState
+                        icon={GitBranch}
+                        title="Failed to Load Pipelines"
+                        description="There was a problem fetching the CI/CD pipelines. Please try again."
+                        action={{ label: 'Retry', onClick: () => refetch() }}
                     />
                 </Card>
             </div>

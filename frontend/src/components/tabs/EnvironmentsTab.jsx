@@ -43,10 +43,12 @@ function ScoreCard({ label, score, delta, color, history }) {
 }
 
 export default function EnvironmentsTab({ onNavigate, cluster }) {
-    const { data: scores, loading: scoresLoading } = useClusterScores(cluster?.id);
-    const { data: metrics, loading: metricsLoading } = useClusterMetrics(cluster?.id);
-    const { data: deployments, loading: depsLoading } = useDeployments(cluster?.id);
-    const { data: incidents, loading: incLoading } = useIncidents(cluster?.id);
+    const { data: scores, loading: scoresLoading, error: scoresError } = useClusterScores(cluster?.id);
+    const { data: metrics, loading: metricsLoading, error: metricsError } = useClusterMetrics(cluster?.id);
+    const { data: deployments, loading: depsLoading, error: depsError } = useDeployments(cluster?.id);
+    const { data: incidents, loading: incLoading, error: incError } = useIncidents(cluster?.id);
+
+    const hasError = scoresError || metricsError || depsError || incError;
 
     if (!cluster) {
         return (
@@ -57,6 +59,21 @@ export default function EnvironmentsTab({ onNavigate, cluster }) {
                         title="No Environment Connected"
                         description="Connect your AWS/GCP account to provision your first production-grade cloud environment."
                         action={{ label: 'Connect Cloud', onClick: () => window.location.href = '/onboarding' }}
+                    />
+                </Card>
+            </div>
+        );
+    }
+
+    if (hasError) {
+        return (
+            <div className="animate-fadeIn pb-10">
+                <Card className="bg-[rgba(244,63,94,0.05)] mt-6 border-dashed" style={{ borderColor: 'rgba(244,63,94,0.3)' }}>
+                    <EmptyState
+                        icon={ServerCrash}
+                        title="Failed to Load Environment Data"
+                        description="There was a problem fetching the environment metrics and scores. Please try again."
+                        action={{ label: 'Retry', onClick: () => window.location.reload() }}
                     />
                 </Card>
             </div>

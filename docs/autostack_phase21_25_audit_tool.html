@@ -1,0 +1,268 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.wrap{padding:1rem 0}
+.hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.25rem;gap:1rem}
+.hdr h1{font-size:18px;font-weight:500;margin-bottom:3px}
+.hdr p{font-size:13px;color:var(--color-text-secondary);line-height:1.5}
+.total-box{flex-shrink:0;text-align:center}
+.total-num{font-size:30px;font-weight:500;line-height:1}
+.total-sub{font-size:11px;color:var(--color-text-secondary);margin-top:2px}
+.p0-box{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:10px 14px;margin-bottom:1rem;font-size:13px}
+.p0-title{font-weight:500;margin-bottom:6px}
+.p0-item{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--color-text-secondary);margin-bottom:4px}
+.p0-dot{width:6px;height:6px;border-radius:50%;background:#E24B4A;flex-shrink:0}
+.verdict{border-radius:var(--border-radius-md);padding:9px 13px;margin-bottom:1.25rem;font-size:13px;font-weight:500;border:0.5px solid}
+.vp{background:var(--color-background-success);color:var(--color-text-success);border-color:var(--color-border-success)}
+.vw{background:var(--color-background-warning);color:var(--color-text-warning);border-color:var(--color-border-warning)}
+.vf{background:var(--color-background-danger);color:var(--color-text-danger);border-color:var(--color-border-danger)}
+.phases{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:1.25rem}
+.phase-card{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px;text-align:center}
+.ph-name{font-size:10px;font-weight:500;color:var(--color-text-secondary);margin-bottom:4px}
+.ph-score{font-size:18px;font-weight:500;line-height:1}
+.ph-items{font-size:10px;color:var(--color-text-secondary);margin-top:2px}
+.section{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);margin-bottom:8px;overflow:hidden}
+.sh{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;user-select:none}
+.sh:hover{background:var(--color-background-secondary)}
+.sl{display:flex;align-items:center;gap:7px}
+.pp{font-size:10px;padding:2px 7px;border-radius:10px;border:0.5px solid;font-weight:500}
+.p21{background:#E6F1FB;color:#185FA5;border-color:#378ADD}
+.p22{background:#EEEDFE;color:#534AB7;border-color:#7F77DD}
+.p23{background:#E1F5EE;color:#0F6E56;border-color:#1D9E75}
+.p24{background:#FAEEDA;color:#854F0B;border-color:#EF9F27}
+.p25{background:#FAEEDA;color:#633806;border-color:#BA7517}
+.st{font-size:13px;font-weight:500}
+.sr{display:flex;align-items:center;gap:7px}
+.ss{font-size:12px;font-weight:500}
+.cv{font-size:11px;color:var(--color-text-secondary);transition:transform 0.2s}
+.cv.open{transform:rotate(90deg)}
+.sb{border-top:0.5px solid var(--color-border-tertiary);display:none}
+.sb.open{display:block}
+.item{display:grid;grid-template-columns:1fr auto;gap:10px;padding:9px 14px;border-bottom:0.5px solid var(--color-border-tertiary);align-items:start}
+.item:last-child{border-bottom:none}
+.il{display:flex;gap:8px;align-items:flex-start}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.d0{background:#E24B4A}.d1{background:#EF9F27}.d2{background:#639922}
+.iq{font-size:12px;line-height:1.5}
+.iw{font-size:11px;color:var(--color-text-secondary);margin-top:2px;line-height:1.4}
+.btns{display:flex;gap:3px;flex-shrink:0}
+.btn{border:0.5px solid var(--color-border-secondary);border-radius:4px;padding:3px 7px;font-size:11px;cursor:pointer;background:transparent;color:var(--color-text-secondary);transition:all 0.12s}
+.btn:hover{background:var(--color-background-secondary)}
+.btn.ap{background:#EAF3DE;color:#3B6D11;border-color:#639922}
+.btn.aw{background:#FAEEDA;color:#854F0B;border-color:#EF9F27}
+.btn.af{background:#FCEBEB;color:#A32D2D;border-color:#E24B4A}
+.foot{margin-top:1.25rem;display:flex;gap:8px}
+.ab{border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:7px 12px;font-size:12px;cursor:pointer;background:transparent;color:var(--color-text-secondary)}
+.ab:hover{background:var(--color-background-secondary)}
+.leg{display:flex;gap:14px;margin-top:.75rem;flex-wrap:wrap}
+.li{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--color-text-secondary)}
+.ld{width:6px;height:6px;border-radius:50%}
+</style>
+
+<div class="wrap">
+<div class="hdr">
+  <div>
+    <h1>AutoStack — Phase 21–25 + 8% Closure Audit</h1>
+    <p>Close the 8% first. Then ship phases in order: 21 → 23 → 22 → 24 → 25.<br>P0 blockers in the pre-phase section must be resolved before anything else.</p>
+  </div>
+  <div class="total-box">
+    <div class="total-num" id="tot">—</div>
+    <div class="total-sub">passing</div>
+  </div>
+</div>
+
+<div class="p0-box">
+  <div class="p0-title">⛔ Pre-Phase P0 Blockers (close before Phase 21)</div>
+  <div class="p0-item"><div class="p0-dot"></div>External penetration test — booked and completed (not optional for SOC2)</div>
+  <div class="p0-item"><div class="p0-dot"></div>Terraform provider published to registry.terraform.io (not just built)</div>
+  <div class="p0-item"><div class="p0-dot"></div>All 18 P1 verification tests run and confirmed ✅</div>
+  <div class="p0-item"><div class="p0-dot"></div>SOC2 evidence clock started (compliance_log filling for 6 months)</div>
+</div>
+
+<div class="verdict vw" id="verd">Answer items to see your readiness verdict.</div>
+
+<div class="phases" id="phase-cards"></div>
+<div id="secs"></div>
+
+<div class="leg">
+  <div class="li"><div class="ld d0"></div>P0 — ship blocker</div>
+  <div class="li"><div class="ld d1"></div>P1 — fix before scale</div>
+  <div class="li"><div class="ld d2"></div>P2 — nice to have</div>
+</div>
+<div class="foot">
+  <button class="ab" onclick="reset()">Reset</button>
+  <button class="ab" onclick="exportRpt()">Export report ↗</button>
+</div>
+</div>
+
+<script>
+const D = [
+  {id:'s17',phase:'Phase 21',pc:'p21',title:'Section 17 — GitHub Actions & Developer Toolchain',cp:'CP #17',
+   items:[
+    {id:'a1',s:'p0',q:'autostack/actions/deploy@v1 published to GitHub Marketplace (not just code in repo)',w:'An action not on GitHub Marketplace requires manual reference by full repo URL. Most teams only use Marketplace actions.'},
+    {id:'a2',s:'p1',q:'Commit status (green checkmark) posted to GitHub commit after successful deploy',w:'Without commit status, developers cannot see deployment state from the PR/commit view. They must check AutoStack dashboard separately.'},
+    {id:'a3',s:'p1',q:'Smoke test failure triggers rollback automatically (deploy → test → rollback on failure workflow)',w:'The point of CI/CD is to catch failures automatically. Without auto-rollback, a broken deploy requires manual intervention.'},
+    {id:'a4',s:'p1',q:'PR preview comment posted with live URL (not just a workflow log message)',w:'GitHub PR comments are the standard UX for preview URLs. Buried workflow logs are not developer-friendly.'},
+    {id:'a5',s:'p1',q:'timeout input works: set timeout=5 on a slow deploy → action fails after 5 minutes',w:'CI jobs that hang block the pipeline indefinitely. Timeout ensures pipelines always complete.'},
+    {id:'a6',s:'p1',q:'AUTOSTACK_TOKEN via env var works — no keychain required in CI runner',w:'CI runners have no keychain. Token via env var is the universal CI auth pattern.'},
+    {id:'a7',s:'p2',q:'wait: false option returns immediately with deployment_id (for async pipelines)',w:'Some teams want to trigger deploy and continue with other steps in parallel. wait: false enables this pattern.'},
+   ]},
+  {id:'s18',phase:'Phase 22',pc:'p22',title:'Section 18 — AI Operations',cp:'CP #18',
+   items:[
+    {id:'b1',s:'p0',q:'RULE U5: AI feature kill switch works — ai_features_enabled=false disables chat + LLM diagnosis without affecting other features',w:'LLM APIs can go down or spike in cost unexpectedly. Without a kill switch, an outage in Anthropic/OpenAI breaks AutoStack.'},
+    {id:'b2',s:'p0',q:'RULE U1: Same AI question asked twice → second response from Redis cache (< 100ms, no LLM API call)',w:'LLM calls cost $0.003-$0.01 each. Without caching, a user refreshing the page 100 times costs $1. At scale this is significant.'},
+    {id:'b3',s:'p1',q:'RULE U2: 11th AI chat message in 60 seconds → rate limited with friendly message (not a raw 429)',w:'Without rate limiting, a single user can exhaust the org\'s LLM quota in seconds with rapid requests.'},
+    {id:'b4',s:'p1',q:'RULE U3: Log lines with real email addresses → PII stripped before sending to LLM API',w:'Log data often contains user emails, IPs, session tokens. Sending to a third-party LLM violates GDPR and SOC2 data handling requirements.'},
+    {id:'b5',s:'p1',q:'RULE U4: LLM response with > 2000 chars → truncated before display (no raw LLM dump)',w:'LLMs occasionally produce extremely long responses. Raw dumps confuse users and can include hallucinated data.'},
+    {id:'b6',s:'p1',q:'AIRE Tier 3 LLM diagnosis: novel incident not matching any keyword pattern → LLM called, root_cause populated',w:'Without LLM tier, novel failures (new error types, framework-specific crashes) produce empty RCA. Users see "diagnosed" with no guidance.'},
+    {id:'b7',s:'p1',q:'AIRE Tier 1 known pattern (OOM): LLM NOT called — check Redis: no llm:diagnosis: key for this incident',w:'Calling LLM for every incident regardless of pattern match wastes money. Known patterns should use template-based RCA only.'},
+    {id:'b8',s:'p2',q:'AI chat: suggested questions shown when conversation is empty (not a blank text box)',w:'Empty text box with no guidance produces low engagement. Suggested questions reduce time-to-first-use.'},
+   ]},
+  {id:'s19',phase:'Phase 23',pc:'p23',title:'Section 19 — Marketplace & Templates',cp:'CP #19',
+   items:[
+    {id:'c1',s:'p0',q:'RULE V2: Community template with privileged: true in K8s manifest → rejected before publication',w:'A malicious template with privileged containers could take over the host node. Security scanning is mandatory before any community template goes live.'},
+    {id:'c2',s:'p1',q:'RULE V1: Published template v1.0.0 cannot be modified — only v1.0.1 can be published',w:'A template that changes silently breaks all existing users who referenced that version. Immutability is a contract.'},
+    {id:'c3',s:'p1',q:'auto_fill variables (NEXTAUTH_URL) populated with actual live_url after deploy (not empty string)',w:'If auto-fill fails, NextAuth cannot generate correct callback URLs and authentication breaks immediately after deploy.'},
+    {id:'c4',s:'p1',q:'AutoStack generates NEXTAUTH_SECRET when variable left empty (32-char cryptographically random)',w:'Users leaving NEXTAUTH_SECRET empty get an insecure deployment. Auto-generation with a strong secret is the correct default.'},
+    {id:'c5',s:'p1',q:'deploy_count increments in templates table after each successful template deployment',w:'deploy_count drives the "Most Popular" sort. If it does not increment, the marketplace always shows 0 deploys.'},
+    {id:'c6',s:'p2',q:'Template detail page renders README markdown from template spec',w:'README is the template\'s documentation. Without it, users cannot understand what they are deploying.'},
+   ]},
+  {id:'s20',phase:'Phase 24',pc:'p24',title:'Section 20 — FinOps & Cost Intelligence',cp:'CP #19 (shared)',
+   items:[
+    {id:'d1',s:'p0',q:'RULE W3: 13 months of org_usage data retained — pg_cron cleanup does NOT delete cost history rows',w:'Users need year-over-year cost comparison. Deleting cost history defeats the entire FinOps feature.'},
+    {id:'d2',s:'p1',q:'RULE W2: Every anomaly and RI recommendation has an action button (not just text)',w:'An observation without an action is noise. Users tune out dashboards full of non-actionable information.'},
+    {id:'d3',s:'p1',q:'Cost anomaly alert deduplicated: same threshold not alerted twice in the same billing period',w:'If the 80% threshold alert fires 100 times (every hour after threshold crossed), users will disable all alerts.'},
+    {id:'d4',s:'p1',q:'RI recommendations only appear after 3+ months of instance usage data (not on new orgs)',w:'RI recommendations based on < 30 days of data are statistically meaningless and create false confidence.'},
+    {id:'d5',s:'p1',q:'Budget at 100%: dashboard shows red warning, new deployments still allowed (budget is informational)',w:'A hard block on deployments when budget is reached would cause production incidents when cost alerts fire. Budget = alert, not gate.'},
+    {id:'d6',s:'p2',q:'Cost breakdown by team shown in CostTab (Team/Enterprise plans)',w:'Team-level cost attribution enables engineering managers to have cost conversations with specific teams.'},
+   ]},
+  {id:'s21',phase:'Phase 25',pc:'p25',title:'Section 21 — Developer Experience Portal',cp:'CP N/A',
+   items:[
+    {id:'e1',s:'p1',q:'Service catalog blocked for Free plan users (Team/Enterprise only) with upgrade prompt',w:'DX Portal is an enterprise feature. Showing it to free users then blocking them creates frustration, not upgrade intent.'},
+    {id:'e2',s:'p1',q:'Service health score accurately reflects active incidents: critical incident → score drops significantly',w:'A service with an active critical incident showing 100% health score destroys trust in the catalog.'},
+    {id:'e3',s:'p1',q:'Runbook URL: edited inline → saved to projects.runbook_url → persists on page reload',w:'If runbook URLs do not persist, engineers stop filling them in after the first time they are lost.'},
+    {id:'e4',s:'p1',q:'Filter by health "Degraded" → shows only services with active incidents (not all services)',w:'The most common catalog query in an incident is "which services are currently degraded?" If the filter does not work, the catalog is useless during incidents.'},
+    {id:'e5',s:'p2',q:'On-call Slack link opens correct Slack deep link (not just a text display)',w:'During an incident, clicking the on-call channel link must open Slack directly. Copy-paste workflow is too slow.'},
+    {id:'e6',s:'p2',q:'Service tier badge (critical/standard/internal/deprecated) shown in catalog table and detail page',w:'Service tier tells engineers which services deserve more caution. An unlabeled catalog forces engineers to remember tier by memory.'},
+   ]},
+]
+
+let st={}
+
+function calcSec(sec){
+  let t=sec.items.length,p=0,f=0,w=0,a=0
+  sec.items.forEach(i=>{const s=st[i.id];if(s){a++;if(s==='pass')p++;else if(s==='fail')f++;else if(s==='warn')w++;}})
+  return{t,p,f,w,a}
+}
+
+function calcAll(){
+  let t=0,p=0,f=0,p0f=0,a=0
+  D.forEach(s=>s.items.forEach(i=>{t++;const s2=st[i.id];if(s2){a++;if(s2==='pass')p++;if(s2==='fail'){f++;if(i.s==='p0')p0f++;}}}))
+  return{t,p,f,p0f,a,pct:t?Math.round(p/t*100):0}
+}
+
+function verdict(sc){
+  if(sc.a<sc.t*0.3)return{c:'vw',txt:'Answer items to see your readiness verdict.'}
+  if(sc.p0f>0)return{c:'vf',txt:`❌ DO NOT SHIP. ${sc.p0f} P0 blocker${sc.p0f>1?'s':''} open. Fix first.`}
+  if(sc.f>2)return{c:'vf',txt:`❌ ${sc.f} items broken. Not ready.`}
+  if(sc.f>0)return{c:'vw',txt:`⚠️ ${sc.f} broken item${sc.f>1?'s':''}. Ship with caution.`}
+  if(sc.pct>=95)return{c:'vp',txt:'✅ All 25 phases complete. AutoStack is fully enterprise-ready.'}
+  if(sc.pct>=75)return{c:'vp',txt:`✅ ${sc.pct}% passing. Review warnings before shipping.`}
+  return{c:'vw',txt:`${sc.pct}% passing. More verification needed.`}
+}
+
+function renderPhaseCards(){
+  const pc=document.getElementById('phase-cards')
+  pc.innerHTML=''
+  D.forEach(sec=>{
+    const sc=calcSec(sec)
+    const pct=sc.t?Math.round(sc.p/sc.t*100):0
+    const col=sc.f>0?'var(--color-text-danger)':sc.w>0?'var(--color-text-warning)':sc.a===sc.t?'var(--color-text-success)':'var(--color-text-primary)'
+    pc.innerHTML+=`<div class="phase-card">
+      <div class="ph-name">${sec.phase}</div>
+      <div class="ph-score" style="color:${col}">${sc.a?pct+'%':'—'}</div>
+      <div class="ph-items">${sc.p}/${sc.t} ok</div>
+    </div>`
+  })
+}
+
+function render(){
+  const sc=calcAll()
+  document.getElementById('tot').textContent=sc.a<1?'—':sc.pct+'%'
+  const v=verdict(sc)
+  const ve=document.getElementById('verd');ve.className='verdict '+v.c;ve.textContent=v.txt
+  renderPhaseCards()
+  D.forEach(sec=>{
+    const ss=calcSec(sec)
+    const el=document.getElementById('sc-'+sec.id)
+    if(el){
+      if(!ss.a){el.textContent=`0/${ss.t}`;el.style.color=''}
+      else if(ss.f>0){el.style.color='var(--color-text-danger)';el.textContent=`${ss.p}/${ss.t}(${ss.f}❌)`}
+      else if(ss.w>0){el.style.color='var(--color-text-warning)';el.textContent=`${ss.p}/${ss.t}(${ss.w}⚠️)`}
+      else{el.style.color='var(--color-text-success)';el.textContent=`${ss.p}/${ss.t}✅`}
+    }
+    sec.items.forEach(i=>{
+      ;['pass','warn','fail'].forEach(t=>{
+        const b=document.getElementById(`B${i.id}${t}`)
+        if(b)b.className='btn'+(st[i.id]===t?' '+(t==='pass'?'ap':t==='warn'?'aw':'af'):'')
+      })
+    })
+  })
+}
+
+function setS(id,s){st[id]=s;render()}
+function toggle(id){
+  document.getElementById('sb-'+id).classList.toggle('open')
+  document.getElementById('cv-'+id).classList.toggle('open')
+}
+function reset(){st={};render()}
+function exportRpt(){
+  const sc=calcAll(),v=verdict(sc)
+  const lines=['# AutoStack Phase 21–25 Audit Report',`Generated: ${new Date().toLocaleString()}`,'',`## Score: ${sc.pct}% (${sc.p}/${sc.t})`,v.txt,'']
+  D.forEach(sec=>{
+    lines.push(`### ${sec.title}`)
+    sec.items.forEach(i=>{
+      const s=st[i.id]
+      lines.push(`${s==='pass'?'✅':s==='warn'?'⚠️':s==='fail'?'❌':'?'} [${i.s.toUpperCase()}] ${i.q}`)
+      if(s==='fail'||s==='warn')lines.push(`   ${i.w}`)
+    })
+    lines.push('')
+  })
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/plain'}));a.download='autostack-phase21-25-audit.md';a.click()
+}
+
+const cont=document.getElementById('secs')
+D.forEach(sec=>{
+  const d=document.createElement('div');d.className='section'
+  d.innerHTML=`
+    <div class="sh" onclick="toggle('${sec.id}')">
+      <div class="sl">
+        <span class="pp ${sec.pc}">${sec.phase}</span>
+        <span class="st">${sec.title}</span>
+      </div>
+      <div class="sr">
+        <span style="font-size:11px;color:var(--color-text-secondary)">${sec.cp}</span>
+        <span class="ss" id="sc-${sec.id}">0/${sec.items.length}</span>
+        <span class="cv" id="cv-${sec.id}">▶</span>
+      </div>
+    </div>
+    <div class="sb" id="sb-${sec.id}">
+      ${sec.items.map(i=>`<div class="item">
+        <div class="il">
+          <div class="dot d${i.s==='p0'?'0':i.s==='p1'?'1':'2'}"></div>
+          <div><div class="iq">${i.q}</div><div class="iw">${i.w}</div></div>
+        </div>
+        <div class="btns">
+          <button class="btn" id="B${i.id}pass" onclick="setS('${i.id}','pass')">✅</button>
+          <button class="btn" id="B${i.id}warn" onclick="setS('${i.id}','warn')">⚠️</button>
+          <button class="btn" id="B${i.id}fail" onclick="setS('${i.id}','fail')">❌</button>
+        </div>
+      </div>`).join('')}
+    </div>`
+  cont.appendChild(d)
+})
+
+document.getElementById('sb-s17').classList.add('open')
+document.getElementById('cv-s17').classList.add('open')
+render()
+</script>

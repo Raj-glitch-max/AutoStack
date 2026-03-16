@@ -1,0 +1,290 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.wrap{padding:1rem 0}
+.hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.5rem;gap:1rem}
+.hdr h1{font-size:18px;font-weight:500;margin-bottom:4px}
+.hdr p{font-size:13px;color:var(--color-text-secondary);line-height:1.5}
+.score-box{flex-shrink:0;text-align:center;padding:8px 14px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md)}
+.score-num{font-size:28px;font-weight:500;line-height:1}
+.score-lbl{font-size:11px;color:var(--color-text-secondary);margin-top:2px}
+.prog-wrap{margin-bottom:1rem}
+.prog-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.prog-label{font-size:12px;color:var(--color-text-secondary);min-width:90px}
+.prog-track{flex:1;height:4px;background:var(--color-background-secondary);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;border-radius:2px;transition:width 0.3s}
+.prog-count{font-size:11px;color:var(--color-text-secondary);min-width:32px;text-align:right}
+.verdict{border-radius:var(--border-radius-md);padding:10px 14px;margin-bottom:1.5rem;font-size:13px;font-weight:500;border:0.5px solid}
+.v-pass{background:var(--color-background-success);color:var(--color-text-success);border-color:var(--color-border-success)}
+.v-warn{background:var(--color-background-warning);color:var(--color-text-warning);border-color:var(--color-border-warning)}
+.v-fail{background:var(--color-background-danger);color:var(--color-text-danger);border-color:var(--color-border-danger)}
+.section{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);margin-bottom:10px;overflow:hidden}
+.sec-head{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;cursor:pointer;user-select:none}
+.sec-head:hover{background:var(--color-background-secondary)}
+.sec-left{display:flex;align-items:center;gap:8px}
+.phase-pill{font-size:10px;padding:2px 7px;border-radius:10px;border:0.5px solid;font-weight:500}
+.p16{background:#E6F1FB;color:#185FA5;border-color:#378ADD}
+.p17{background:#EEEDFE;color:#534AB7;border-color:#7F77DD}
+.p18{background:#E1F5EE;color:#0F6E56;border-color:#1D9E75}
+.p19{background:#FAEEDA;color:#854F0B;border-color:#EF9F27}
+.p20{background:#FCEBEB;color:#A32D2D;border-color:#E24B4A}
+.sec-title{font-size:14px;font-weight:500}
+.sec-right{display:flex;align-items:center;gap:8px}
+.cp-tag{font-size:11px;padding:2px 7px;border-radius:4px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);color:var(--color-text-secondary)}
+.sec-score{font-size:12px;font-weight:500}
+.chev{font-size:11px;color:var(--color-text-secondary);transition:transform 0.2s}
+.chev.open{transform:rotate(90deg)}
+.sec-body{border-top:0.5px solid var(--color-border-tertiary);display:none}
+.sec-body.open{display:block}
+.item{display:grid;grid-template-columns:1fr auto;align-items:start;gap:10px;padding:9px 14px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.item:last-child{border-bottom:none}
+.item-l{display:flex;align-items:flex-start;gap:8px}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.d0{background:#E24B4A}.d1{background:#EF9F27}.d2{background:#639922}
+.item-q{font-size:12px;line-height:1.5;color:var(--color-text-primary)}
+.item-w{font-size:11px;color:var(--color-text-secondary);margin-top:2px;line-height:1.4}
+.btns{display:flex;gap:3px;flex-shrink:0}
+.btn{border:0.5px solid var(--color-border-secondary);border-radius:4px;padding:3px 7px;font-size:11px;cursor:pointer;background:transparent;color:var(--color-text-secondary);transition:all 0.12s}
+.btn:hover{background:var(--color-background-secondary)}
+.btn.ap{background:#EAF3DE;color:#3B6D11;border-color:#639922}
+.btn.aw{background:#FAEEDA;color:#854F0B;border-color:#EF9F27}
+.btn.af{background:#FCEBEB;color:#A32D2D;border-color:#E24B4A}
+.bottom{margin-top:1.5rem;display:flex;gap:8px}
+.ab{border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:7px 13px;font-size:13px;cursor:pointer;background:transparent;color:var(--color-text-secondary)}
+.ab:hover{background:var(--color-background-secondary)}
+.legend{display:flex;gap:14px;margin-top:1rem;flex-wrap:wrap}
+.li{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary)}
+.ld{width:6px;height:6px;border-radius:50%}
+</style>
+
+<div class="wrap">
+<div class="hdr">
+  <div>
+    <h1>AutoStack — Phase 16–20 Audit Tool</h1>
+    <p>Stop at each [AUDIT CHECKPOINT] in the plan. Fill this out brutally honestly.<br>SOC2 section requires third-party pen test before marking complete.</p>
+  </div>
+  <div class="score-box">
+    <div class="score-num" id="tot">—</div>
+    <div class="score-lbl">overall</div>
+  </div>
+</div>
+
+<div class="prog-wrap" id="prog-wrap"></div>
+<div class="verdict v-warn" id="verd">Answer items across all sections to see your verdict.</div>
+<div id="secs"></div>
+
+<div class="legend">
+  <div class="li"><div class="ld d0"></div>P0 — ship blocker</div>
+  <div class="li"><div class="ld d1"></div>P1 — fix before scale</div>
+  <div class="li"><div class="ld d2"></div>P2 — nice to have</div>
+</div>
+<div class="bottom">
+  <button class="ab" onclick="resetAll()">Reset all</button>
+  <button class="ab" onclick="exportReport()">Export report ↗</button>
+</div>
+</div>
+
+<script>
+const DATA = [
+  {
+    id:'s13',phase:'Phase 16',phaseClass:'p16',title:'Section 13 — CLI & Developer Experience',cp:'Checkpoint #13',
+    items:[
+      {id:'m1',sev:'p0',q:'autostack auth login uses device code flow — works in headless CI environments with no browser',w:'SSH sessions, Docker containers, GitHub Actions — none of these have a browser. OAuth redirect-based login fails silently.'},
+      {id:'m2',sev:'p0',q:'CLI credentials stored securely per OS (macOS Keychain, Linux Secret Service, Windows Credential Manager)',w:'Plaintext credentials in ~/.autostack/config are readable by any process running as that user.'},
+      {id:'m3',sev:'p1',q:'autostack deploy exits 0 on success, exits 1 on failure — POSIX compliant (not 0 on failure)',w:'CI pipelines use exit codes to detect failures. `if autostack deploy; then deploy_next_step` breaks silently if exit code is wrong.'},
+      {id:'m4',sev:'p1',q:'Progress goes to stderr, final JSON to stdout (autostack deploy --json 2>/dev/null | jq .live_url works)',w:'Mixing progress text into stdout breaks every `jq` pipeline. Scripts become unreliable.'},
+      {id:'m5',sev:'p1',q:'autostack deploy --dry-run shows infra plan + cost without creating any AWS resources',w:'Users want to audit what will be created before committing. Without dry-run, the only way to see the plan is to start provisioning.'},
+      {id:'m6',sev:'p1',q:'autostack vars set DATABASE_URL=... auto-detects as secret (stored in Vault) without --secret flag',w:'Requiring explicit --secret flag means developers forget it. Secrets end up in plaintext env vars.'},
+      {id:'m7',sev:'p1',q:'autostack vars list [env] masks secret values (shows ••••••••, not the actual value)',w:'The CLI is often used in screen shares and recordings. Secret values visible in terminal = leaked credentials.'},
+      {id:'m8',sev:'p1',q:'autostack env delete [env] requires typing the environment name to confirm (not just --yes flag)',w:'Accidental `autostack env delete production` with `--yes` is catastrophic. Name confirmation forces intentional action.'},
+      {id:'m9',sev:'p1',q:'AUTOSTACK_TOKEN env var works as authentication in CI (no keychain dependency)',w:'CI runners have no keychain. Token via env var is the standard CI auth pattern (same as GITHUB_TOKEN, STRIPE_KEY).'},
+      {id:'m10',sev:'p2',q:'autostack --version prints version and exits 0',w:'Standard convention. Every well-behaved CLI tool supports this. Useful for debugging support tickets.'},
+    ]
+  },
+  {
+    id:'s14',phase:'Phase 17',phaseClass:'p17',title:'Section 14 — SSO & Enterprise Identity',cp:'Checkpoint #14',
+    items:[
+      {id:'n1',sev:'p0',q:'SAML XML signature validated against IdP certificate BEFORE processing any user attributes',w:'An unsigned SAML assertion can be forged by anyone. Without signature validation, anyone can claim to be any user in your system.'},
+      {id:'n2',sev:'p0',q:'SAML assertion ID stored in Redis after use — replayed assertion rejected',w:'A captured SAML assertion can be replayed to log in as the victim indefinitely. Assertion ID dedup prevents this.'},
+      {id:'n3',sev:'p0',q:'SAML InResponseTo checked — unsolicited assertions (when not expected) handled separately from SP-initiated',w:'InResponseTo binding prevents CSRF attacks where attacker forces a user to submit a valid assertion.'},
+      {id:'n4',sev:'p1',q:'JIT provisioning creates user on first login, assigns default_role from sso_configurations',w:'Manual invitation flow for SSO is wrong UX. Enterprise wants: add user to IdP group → user can log in. No admin action in AutoStack.'},
+      {id:'n5',sev:'p1',q:'Email domain filter works: user from allowed domain can JIT provision, other domains cannot',w:'Without domain filtering, anyone who discovers your SSO endpoint can create an account in your org.'},
+      {id:'n6',sev:'p1',q:'SSO Enforced mode blocks email/password login for the org (existing users redirected to SSO)',w:'Enterprise IT mandates SSO to disable password-based login. Without enforcement, password login remains a bypass.'},
+      {id:'n7',sev:'p1',q:'OIDC: id_token signature validated, iss and aud claims verified',w:'An OIDC id_token from a different app (same IdP, different client_id) must not be accepted. aud claim prevents this.'},
+      {id:'n8',sev:'p1',q:'OIDC client_secret stored in Vault (not in sso_configurations config JSONB)',w:'JSONB in DB appears in exports and logs. Client secrets in JSONB are permanently exposed after first backup.'},
+      {id:'n9',sev:'p1',q:'IdP-initiated flow works (user clicks app tile in Okta → lands in AutoStack logged in)',w:'Most enterprise Okta setups launch apps from the Okta dashboard. Without IdP-initiated support, the integration appears broken to IT admins.'},
+      {id:'n10',sev:'p2',q:'SP Metadata XML downloadable from SSO settings (importable into Okta, Azure AD)',w:'Without downloadable metadata, IT admins must manually fill in Entity ID and ACS URL. Manual entry errors are the #1 SSO support ticket.'},
+    ]
+  },
+  {
+    id:'s15',phase:'Phase 18',phaseClass:'p18',title:'Section 15 — Terraform Provider',cp:'Checkpoint N/A',
+    items:[
+      {id:'o1',sev:'p0',q:'terraform apply creates real infrastructure (not just a DB record) and waits until status="live"',w:'A provider that returns success before the resource is ready causes terraform to report success while the app is still provisioning.'},
+      {id:'o2',sev:'p0',q:'terraform destroy triggers infra-teardown and waits until all AWS resources deleted',w:'terraform destroy that returns before resources are deleted means users get billed for infrastructure Terraform thinks is gone.'},
+      {id:'o3',sev:'p1',q:'terraform plan on second run shows "No changes" (provider is idempotent — RULE R2)',w:'A provider that always shows changes is unusable. Teams run `terraform plan` in CI to detect drift — false positives block pipelines.'},
+      {id:'o4',sev:'p1',q:'Drift detection works: change environment size in dashboard, terraform plan shows the drift',w:'Without drift detection, Terraform and the dashboard get out of sync. Teams lose confidence in which is the source of truth.'},
+      {id:'o5',sev:'p1',q:'secret_env_vars marked as sensitive=true in schema (not shown in terraform plan output)',w:'Terraform plan output is often logged in CI. Sensitive values in plan output = leaked credentials in CI logs.'},
+      {id:'o6',sev:'p1',q:'terraform import autostack_environment.name [id] works for existing environments',w:'Teams with existing AutoStack environments cannot adopt Terraform without import. Import is the migration path.'},
+      {id:'o7',sev:'p2',q:'Provider published to Terraform Registry (registry.terraform.io/providers/autostack/autostack)',w:'Without registry publication, users must manually install from GitHub releases. Most teams will not do this.'},
+    ]
+  },
+  {
+    id:'s16',phase:'Phase 19',phaseClass:'p19',title:'Section 16 — Integrations & Webhooks',cp:'Checkpoint #15',
+    items:[
+      {id:'p1',sev:'p0',q:'Integration failures are non-blocking — AIRE incident saved to DB even when PagerDuty/Jira is down',w:'RULE S2. If a PagerDuty outage causes AutoStack to fail saving incidents, then every PagerDuty outage = AutoStack outage.'},
+      {id:'p2',sev:'p0',q:'Outbound webhooks are signed (X-AutoStack-Signature header with HMAC-SHA256)',w:'RULE S3. Without signing, users cannot verify payloads are from AutoStack. Any server on the internet can fake a webhook.'},
+      {id:'p3',sev:'p1',q:'PagerDuty: dedup_key prevents duplicate incidents (same AutoStack incident = one PD incident)',w:'AIRE detects and re-detects the same pattern multiple times. Without dedup, each detection = a new PagerDuty page. On-call engineer gets spammed.'},
+      {id:'p4',sev:'p1',q:'PagerDuty: AutoStack resolving an incident sends event_action="resolve" (closes PD incident automatically)',w:'Without auto-resolve, every PagerDuty incident requires manual closure. On-call fatigue builds. Alerts get ignored.'},
+      {id:'p5',sev:'p1',q:'Datadog: all 14 autostack.* metrics appear in Datadog within 90 seconds of enabling',w:'If metrics do not appear, the integration looks broken. Users disable it immediately.'},
+      {id:'p6',sev:'p1',q:'Jira: duplicate finding does not create duplicate Jira ticket (dedup by finding ID)',w:'COIE runs every 5 minutes. Without dedup, the same finding creates 288 Jira tickets per day.'},
+      {id:'p7',sev:'p1',q:'Jira API token stored in Vault (not in integrations.config JSONB directly)',w:'Jira API tokens have the same access as the user who created them. Tokens in JSONB = permanent exposure in every DB export.'},
+      {id:'p8',sev:'p1',q:'Custom webhook: retry 3 times (immediate, 5min, 30min) on non-200 response',w:'Transient endpoint failures should not permanently lose events. Three retries covers 99% of temporary outages.'},
+      {id:'p9',sev:'p1',q:'Custom webhook: after 3 failures, webhook marked "failing", dashboard shows warning',w:'Silent webhook failures mean users think events are being delivered when they are not. Visible failure state enables debugging.'},
+      {id:'p10',sev:'p2',q:'Delivery log shows last 50 webhook attempts with timestamp, status, response code',w:'Without a delivery log, debugging "why did my endpoint not receive the event" requires asking AutoStack support.'},
+    ]
+  },
+  {
+    id:'s17',phase:'Phase 20',phaseClass:'p20',title:'Section 17 — SOC2 & Compliance',cp:'Checkpoint #16',
+    items:[
+      {id:'q1',sev:'p0',q:'Third-party penetration test completed — all critical and high findings remediated (report on file)',w:'RULE T2. SOC2 auditors expect evidence of penetration testing. Without a pen test, you cannot pass SOC2 Type II.'},
+      {id:'q2',sev:'p0',q:'MFA enforcement works for org.require_mfa=true — non-MFA users blocked from accessing dashboard',w:'SOC2 CC6.1 requires logical access controls. MFA enforcement is the primary evidence.'},
+      {id:'q3',sev:'p0',q:'All audit_log writes are append-only — no UPDATE or DELETE possible (even via service role)',w:'SOC2 auditors review audit logs. If logs can be modified, they are useless as evidence.'},
+      {id:'q4',sev:'p0',q:'Data retention pg_cron jobs running and logging to compliance_log (evidence of enforcement)',w:'RULE T3. Documenting the policy without automating enforcement does not satisfy SOC2 auditors. They want logs proving cleanup ran.'},
+      {id:'q5',sev:'p0',q:'Dependency scanning GitHub Action fails the build on critical/high CVEs (no bypass mechanism)',w:'SOC2 CC7.1 requires vulnerability management. A scan that runs but never blocks is not a control — it is theater.'},
+      {id:'q6',sev:'p1',q:'Gitleaks confirms zero leaked secrets in full git history (run: gitleaks detect --source . --log-opts="--all")',w:'Secrets committed to git persist forever. Even after rotation, the original key is in git history and accessible to anyone with repo access.'},
+      {id:'q7',sev:'p1',q:'ComplianceTab accessible (Team/Enterprise only) — shows control matrix with pass/fail for all 52 controls',w:'Without a compliance dashboard, enterprise security teams must interview AutoStack engineers on each control. That does not scale.'},
+      {id:'q8',sev:'p1',q:'SOC2 monthly automated control tests run — compliance_log shows last 6 months of evidence',w:'RULE T1. SOC2 Type II requires evidence that controls were in place consistently over 6 months. Automated logs are that evidence.'},
+      {id:'q9',sev:'p1',q:'DPA (Data Processing Agreement) downloadable from ComplianceTab (required for GDPR + SOC2)',w:'Any EU customer or enterprise with GDPR obligations needs a DPA before signing a contract with AutoStack.'},
+      {id:'q10',sev:'p2',q:'SOC2 report (once obtained) uploaded to ComplianceTab and accessible to Team/Enterprise customers',w:'Customers under procurement pressure (large deals) need to provide the SOC2 report to their security team. Self-service saves everyone time.'},
+    ]
+  }
+]
+
+let state = {}
+
+function calcSection(sec){
+  let total=sec.items.length,pass=0,fail=0,warn=0,answered=0
+  sec.items.forEach(i=>{const s=state[i.id];if(s){answered++;if(s==='pass')pass++;else if(s==='fail')fail++;else if(s==='warn')warn++;}})
+  return{total,pass,fail,warn,answered}
+}
+
+function calcAll(){
+  let total=0,pass=0,fail=0,p0fail=0,answered=0
+  DATA.forEach(s=>s.items.forEach(i=>{total++;const st=state[i.id];if(st){answered++;if(st==='pass')pass++;if(st==='fail'){fail++;if(i.sev==='p0')p0fail++;}}}))
+  return{total,pass,fail,p0fail,answered,pct:total?Math.round(pass/total*100):0}
+}
+
+function verdict(sc){
+  if(sc.answered<sc.total*0.4) return{cls:'v-warn',t:'Answer items across all sections to see your verdict.'}
+  if(sc.p0fail>0) return{cls:'v-fail',t:`❌ DO NOT SHIP. ${sc.p0fail} P0 blocker${sc.p0fail>1?'s':''} unresolved.`}
+  if(sc.fail>2) return{cls:'v-fail',t:`❌ NOT READY. ${sc.fail} broken items. Fix before shipping.`}
+  if(sc.fail>0) return{cls:'v-warn',t:`⚠️ SHIP WITH CAUTION. ${sc.fail} item${sc.fail>1?'s':''} broken.`}
+  if(sc.pct>=100) return{cls:'v-pass',t:'✅ ALL 20 PHASES COMPLETE. AutoStack is enterprise-ready.'}
+  if(sc.pct>=80) return{cls:'v-pass',t:`✅ ${sc.pct}% passing. Review remaining warnings.`}
+  return{cls:'v-warn',t:`⚠️ ${sc.pct}% passing. More work needed.`}
+}
+
+function renderProgressBars(){
+  const pw = document.getElementById('prog-wrap')
+  pw.innerHTML = ''
+  const all = calcAll()
+  DATA.forEach(sec=>{
+    const sc = calcSection(sec)
+    const pct = sc.total ? Math.round(sc.pass/sc.total*100) : 0
+    const color = sc.fail>0?'#E24B4A':sc.warn>0?'#EF9F27':sc.answered===sc.total?'#1D9E75':'#378ADD'
+    pw.innerHTML += `<div class="prog-row">
+      <div class="prog-label">${sec.phase}</div>
+      <div class="prog-track"><div class="prog-fill" style="width:${pct}%;background:${color}"></div></div>
+      <div class="prog-count">${sc.pass}/${sc.total}</div>
+    </div>`
+  })
+}
+
+function render(){
+  const sc = calcAll()
+  document.getElementById('tot').textContent = sc.answered<sc.total*0.4?'—':sc.pct+'%'
+  const v = verdict(sc)
+  const ve = document.getElementById('verd')
+  ve.className='verdict '+v.cls; ve.textContent=v.t
+  renderProgressBars()
+  DATA.forEach(sec=>{
+    const ss=calcSection(sec)
+    const el=document.getElementById('sc-'+sec.id)
+    if(el){
+      if(ss.answered===0){el.textContent=`0/${ss.total}`;el.style.color=''}
+      else if(ss.fail>0){el.style.color='var(--color-text-danger)';el.textContent=`${ss.pass}/${ss.total} (${ss.fail}❌)`}
+      else if(ss.warn>0){el.style.color='var(--color-text-warning)';el.textContent=`${ss.pass}/${ss.total} (${ss.warn}⚠️)`}
+      else{el.style.color='var(--color-text-success)';el.textContent=`${ss.pass}/${ss.total} ✅`}
+    }
+    sec.items.forEach(i=>{
+      const s=state[i.id]
+      ;['pass','warn','fail'].forEach(t=>{
+        const b=document.getElementById(`b${i.id}${t}`)
+        if(b) b.className='btn'+(s===t?' '+(t==='pass'?'ap':t==='warn'?'aw':'af'):'')
+      })
+    })
+  })
+}
+
+function setS(id,s){state[id]=s;render()}
+function toggle(id){
+  document.getElementById('b-'+id).classList.toggle('open')
+  document.getElementById('c-'+id).classList.toggle('open')
+}
+function resetAll(){state={};render()}
+function exportReport(){
+  const sc=calcAll()
+  const v=verdict(sc)
+  const lines=['# AutoStack Phase 16–20 Enterprise Audit',`Generated: ${new Date().toLocaleString()}`,'',`## Overall: ${sc.pct}% (${sc.pass}/${sc.total})`,v.t,'']
+  DATA.forEach(sec=>{
+    lines.push(`### ${sec.title}`)
+    sec.items.forEach(i=>{
+      const s=state[i.id]
+      lines.push(`${s==='pass'?'✅':s==='warn'?'⚠️':s==='fail'?'❌':'?'} [${i.sev.toUpperCase()}] ${i.q}`)
+      if(s==='fail'||s==='warn') lines.push(`   ${i.w}`)
+    })
+    lines.push('')
+  })
+  const a=document.createElement('a')
+  a.href=URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/plain'}))
+  a.download='autostack-phase16-20-audit.md';a.click()
+}
+
+const container=document.getElementById('secs')
+DATA.forEach(sec=>{
+  const d=document.createElement('div')
+  d.className='section'
+  d.innerHTML=`
+    <div class="sec-head" onclick="toggle('${sec.id}')">
+      <div class="sec-left">
+        <span class="phase-pill ${sec.phaseClass}">${sec.phase}</span>
+        <span class="sec-title">${sec.title}</span>
+      </div>
+      <div class="sec-right">
+        <span class="cp-tag">${sec.cp}</span>
+        <span class="sec-score" id="sc-${sec.id}">0/${sec.items.length}</span>
+        <span class="chev" id="c-${sec.id}">▶</span>
+      </div>
+    </div>
+    <div class="sec-body" id="b-${sec.id}">
+      ${sec.items.map(i=>`
+        <div class="item">
+          <div class="item-l">
+            <div class="dot d${i.sev==='p0'?'0':i.sev==='p1'?'1':'2'}"></div>
+            <div><div class="item-q">${i.q}</div><div class="item-w">${i.w}</div></div>
+          </div>
+          <div class="btns">
+            <button class="btn" id="b${i.id}pass" onclick="setS('${i.id}','pass')">✅</button>
+            <button class="btn" id="b${i.id}warn" onclick="setS('${i.id}','warn')">⚠️</button>
+            <button class="btn" id="b${i.id}fail" onclick="setS('${i.id}','fail')">❌</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>`
+  container.appendChild(d)
+})
+
+document.getElementById('b-s13').classList.add('open')
+document.getElementById('c-s13').classList.add('open')
+render()
+</script>

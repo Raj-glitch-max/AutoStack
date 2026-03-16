@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AutoStack Infrastructure Inventory</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&amp;family=DM+Sans:wght@400;500;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2463eb",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#07090E",
+                        "surface": "#0C0F17",
+                        "border-subtle": "#1C2235",
+                        "text-primary": "#E2E8F0",
+                        "text-secondary": "#94A3B8",
+                        "status-green": "#10B981",
+                        "status-amber": "#F59E0B",
+                        "status-blue": "#3B82F6"
+                    },
+                    fontFamily: {
+                        "display": ["Syne", "sans-serif"],
+                        "body": ["DM Sans", "sans-serif"],
+                        "mono": ["JetBrains Mono", "monospace"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-body antialiased">
+<div class="relative flex h-auto min-h-screen w-full flex-row overflow-hidden">
+<!-- Sidebar -->
+<div class="w-[220px] shrink-0 bg-[#07090E] border-r border-border-subtle flex flex-col h-screen sticky top-0">
+<div class="flex items-center gap-3 p-5 border-b border-border-subtle">
+<div class="size-8 rounded bg-gradient-to-br from-primary to-blue-400 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-white text-lg">layers</span>
+</div>
+<div class="flex flex-col overflow-hidden">
+<h1 class="text-text-primary text-base font-display font-bold truncate">AutoStack</h1>
+<p class="text-text-secondary font-mono text-xs truncate">us-east-1</p>
+</div>
+</div>
+<nav class="flex-1 overflow-y-auto py-4 px-3 flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">home</span>
+<span class="text-sm font-medium">Overview</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">grid_view</span>
+<span class="text-sm font-medium">Clusters</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">apps</span>
+<span class="text-sm font-medium">Workloads</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 text-primary" href="#">
+<span class="material-symbols-outlined fill text-[20px]">dns</span>
+<span class="text-sm font-medium">Infrastructure</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface transition-colors mt-auto" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+</nav>
+</div>
+<!-- Main Content -->
+<div class="flex-1 flex flex-col min-w-0">
+<!-- Topbar -->
+<header class="h-[52px] shrink-0 flex items-center justify-between border-b border-border-subtle bg-background-dark px-6 sticky top-0 z-10">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-text-secondary">dns</span>
+<h2 class="text-text-primary text-sm font-display font-semibold">Infrastructure</h2>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative w-64 hidden md:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary text-[18px]">search</span>
+<input class="w-full bg-surface border border-border-subtle rounded-lg pl-9 pr-3 py-1.5 text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" placeholder="Search resources..." type="text"/>
+</div>
+<button class="bg-primary hover:bg-primary/90 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">add</span>
+                        New Resource
+                    </button>
+<div class="flex items-center gap-2 border-l border-border-subtle pl-4 ml-2">
+<button class="text-text-secondary hover:text-text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+</button>
+<div class="size-7 rounded-full bg-gradient-to-r from-purple-500 to-primary ml-2 border border-border-subtle cursor-pointer"></div>
+</div>
+</div>
+</header>
+<!-- Page Content -->
+<main class="flex-1 overflow-y-auto p-6 lg:p-8">
+<div class="max-w-[1200px] mx-auto flex flex-col gap-6">
+<!-- Page Header -->
+<div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+<div class="flex flex-col gap-2">
+<h1 class="text-text-primary font-display text-2xl font-bold tracking-tight">Infrastructure</h1>
+<div class="flex items-center gap-3">
+<p class="text-text-secondary text-sm">AWS resource inventory</p>
+<span class="bg-surface border border-border-subtle px-2 py-0.5 rounded text-text-secondary font-mono text-xs">us-east-1</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="bg-surface hover:bg-border-subtle border border-border-subtle text-text-primary text-sm font-medium px-3 py-1.5 rounded-lg transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">refresh</span>
+                                Refresh
+                            </button>
+</div>
+</div>
+<!-- Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+<!-- Card 1: EKS -->
+<div class="bg-surface border border-border-subtle rounded-xl p-5 flex flex-col gap-4 hover:border-border-subtle/80 transition-colors">
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-3">
+<div class="p-2 rounded-lg bg-status-blue/10 text-status-blue">
+<span class="material-symbols-outlined">hub</span>
+</div>
+<div>
+<h3 class="text-text-primary font-mono text-sm font-medium">prod-eks-us-east-1</h3>
+<p class="text-text-secondary text-xs mt-0.5">EKS Cluster</p>
+</div>
+</div>
+<span class="flex items-center gap-1.5 bg-status-green/10 text-status-green border border-status-green/20 px-2.5 py-1 rounded-full text-xs font-medium">
+<span class="size-1.5 rounded-full bg-status-green"></span>
+                                    Healthy
+                                </span>
+</div>
+<div class="flex items-baseline gap-2 mt-2">
+<span class="font-display font-bold text-2xl text-text-primary">6</span>
+<span class="text-text-secondary text-sm">nodes</span>
+</div>
+<div class="flex flex-col gap-3 mt-2">
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between text-xs">
+<span class="text-text-secondary">CPU</span>
+<span class="font-mono text-text-primary">42%</span>
+</div>
+<div class="h-1.5 w-full bg-background-dark rounded-full overflow-hidden">
+<div class="h-full bg-status-green rounded-full" style="width: 42%"></div>
+</div>
+</div>
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between text-xs">
+<span class="text-text-secondary">Memory</span>
+<span class="font-mono text-text-primary">67%</span>
+</div>
+<div class="h-1.5 w-full bg-background-dark rounded-full overflow-hidden">
+<div class="h-full bg-status-amber rounded-full" style="width: 67%"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 2: RDS -->
+<div class="bg-surface border border-border-subtle rounded-xl p-5 flex flex-col gap-4 hover:border-border-subtle/80 transition-colors">
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-3">
+<div class="p-2 rounded-lg bg-status-blue/10 text-status-blue">
+<span class="material-symbols-outlined">database</span>
+</div>
+<div>
+<h3 class="text-text-primary font-mono text-sm font-medium">autostack-primary-db</h3>
+<p class="text-text-secondary text-xs mt-0.5">RDS PostgreSQL</p>
+</div>
+</div>
+<span class="flex items-center gap-1.5 bg-status-green/10 text-status-green border border-status-green/20 px-2.5 py-1 rounded-full text-xs font-medium">
+<span class="size-1.5 rounded-full bg-status-green"></span>
+                                    Available
+                                </span>
+</div>
+<div class="mt-2">
+<span class="bg-background-dark border border-border-subtle px-2.5 py-1 rounded text-text-primary font-mono text-sm">db.r6g.xlarge</span>
+</div>
+<div class="flex flex-col gap-3 mt-2">
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between text-xs">
+<span class="text-text-secondary">CPU</span>
+<span class="font-mono text-text-primary">28%</span>
+</div>
+<div class="h-1.5 w-full bg-background-dark rounded-full overflow-hidden">
+<div class="h-full bg-status-green rounded-full" style="width: 28%"></div>
+</div>
+</div>
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between text-xs">
+<span class="text-text-secondary">Memory</span>
+<span class="font-mono text-text-primary">54%</span>
+</div>
+<div class="h-1.5 w-full bg-background-dark rounded-full overflow-hidden">
+<div class="h-full bg-status-green rounded-full" style="width: 54%"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 3: ElastiCache -->
+<div class="bg-surface border border-border-subtle rounded-xl p-5 flex flex-col gap-4 hover:border-border-subtle/80 transition-colors">
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-3">
+<div class="p-2 rounded-lg bg-status-blue/10 text-status-blue">
+<span class="material-symbols-outlined">memory</span>
+</div>
+<div>
+<h3 class="text-text-primary font-mono text-sm font-medium">autostack-cache</h3>
+<p class="text-text-secondary text-xs mt-0.5">ElastiCache Redis</p>
+</div>
+</div>
+<span class="flex items-center gap-1.5 bg-status-green/10 text-status-green border border-status-green/20 px-2.5 py-1 rounded-full text-xs font-medium">
+<span class="size-1.5 rounded-full bg-status-green"></span>
+                                    Available
+                                </span>
+</div>
+<div class="mt-2">
+<span class="bg-background-dark border border-border-subtle px-2.5 py-1 rounded text-text-primary font-mono text-sm">cache.r6g.large</span>
+</div>
+<div class="flex flex-col gap-3 mt-2">
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between text-xs">
+<span class="text-text-secondary">CPU</span>
+<span class="font-mono text-text-primary">15%</span>
+</div>
+<div class="h-1.5 w-full bg-background-dark rounded-full overflow-hidden">
+<div class="h-full bg-status-green rounded-full" style="width: 15%"></div>
+</div>
+</div>
+<div class="flex flex-col gap-1.5">
+<div class="flex justify-between text-xs">
+<span class="text-text-secondary">Memory</span>
+<span class="font-mono text-text-primary">72%</span>
+</div>
+<div class="h-1.5 w-full bg-background-dark rounded-full overflow-hidden">
+<div class="h-full bg-status-amber rounded-full" style="width: 72%"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 4: ALB -->
+<div class="bg-surface border border-border-subtle rounded-xl p-5 flex flex-col gap-4 hover:border-border-subtle/80 transition-colors">
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-3">
+<div class="p-2 rounded-lg bg-status-blue/10 text-status-blue">
+<span class="material-symbols-outlined">route</span>
+</div>
+<div>
+<h3 class="text-text-primary font-mono text-sm font-medium">autostack-ingress</h3>
+<p class="text-text-secondary text-xs mt-0.5">ALB Ingress</p>
+</div>
+</div>
+<span class="flex items-center gap-1.5 bg-status-green/10 text-status-green border border-status-green/20 px-2.5 py-1 rounded-full text-xs font-medium">
+<span class="size-1.5 rounded-full bg-status-green"></span>
+                                    Active
+                                </span>
+</div>
+<div class="flex items-baseline gap-2 mt-2">
+<span class="font-display font-bold text-2xl text-text-primary">2,847</span>
+<span class="text-text-secondary text-sm">req/min</span>
+</div>
+<div class="flex flex-col gap-2 mt-2">
+<div class="flex justify-between items-center py-1 border-b border-border-subtle/50">
+<span class="text-text-secondary text-xs">Active Connections</span>
+<span class="font-mono text-text-primary text-sm">1,432</span>
+</div>
+<div class="flex justify-between items-center py-1 border-b border-border-subtle/50">
+<span class="text-text-secondary text-xs">Target Groups</span>
+<span class="font-mono text-text-primary text-sm">4</span>
+</div>
+<div class="flex justify-between items-center py-1">
+<span class="text-text-secondary text-xs">Healthy Hosts</span>
+<span class="font-mono text-text-primary text-sm">12/12</span>
+</div>
+</div>
+</div>
+<!-- Card 5: S3 -->
+<div class="bg-surface border border-border-subtle rounded-xl p-5 flex flex-col gap-4 hover:border-border-subtle/80 transition-colors">
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-3">
+<div class="p-2 rounded-lg bg-status-blue/10 text-status-blue">
+<span class="material-symbols-outlined">inventory_2</span>
+</div>
+<div>
+<h3 class="text-text-primary font-mono text-sm font-medium">autostack-artifacts</h3>
+<p class="text-text-secondary text-xs mt-0.5">S3 Bucket</p>
+</div>
+</div>
+<span class="flex items-center gap-1.5 bg-status-green/10 text-status-green border border-status-green/20 px-2.5 py-1 rounded-full text-xs font-medium">
+<span class="size-1.5 rounded-full bg-status-green"></span>
+                                    Active
+                                </span>
+</div>
+<div class="flex items-baseline gap-2 mt-2">
+<span class="font-display font-bold text-2xl text-text-primary">247</span>
+<span class="text-text-secondary text-sm">GB</span>
+</div>
+<div class="flex flex-col gap-2 mt-2">
+<div class="flex justify-between items-center py-1 border-b border-border-subtle/50">
+<span class="text-text-secondary text-xs">Total Objects</span>
+<span class="font-mono text-text-primary text-sm">14,892</span>
+</div>
+<div class="flex justify-between items-center py-1 border-b border-border-subtle/50">
+<span class="text-text-secondary text-xs">Lifecycle Rules</span>
+<span class="font-mono text-text-primary text-sm">2 active</span>
+</div>
+<div class="flex justify-between items-center py-1">
+<span class="text-text-secondary text-xs">Versioning</span>
+<span class="font-mono text-text-primary text-sm">Enabled</span>
+</div>
+</div>
+</div>
+<!-- Card 6: ECR -->
+<div class="bg-surface border border-border-subtle rounded-xl p-5 flex flex-col gap-4 hover:border-border-subtle/80 transition-colors">
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-3">
+<div class="p-2 rounded-lg bg-status-blue/10 text-status-blue">
+<span class="material-symbols-outlined">folder_zip</span>
+</div>
+<div>
+<h3 class="text-text-primary font-mono text-sm font-medium">autostack-ecr</h3>
+<p class="text-text-secondary text-xs mt-0.5">ECR Registry</p>
+</div>
+</div>
+<span class="flex items-center gap-1.5 bg-status-amber/10 text-status-amber border border-status-amber/30 px-2.5 py-1 rounded-full text-xs font-medium shadow-[0_0_10px_rgba(245,158,11,0.2)]">
+<span class="size-1.5 rounded-full bg-status-amber"></span>
+                                    Warning
+                                </span>
+</div>
+<div class="flex items-baseline gap-2 mt-2">
+<span class="font-display font-bold text-2xl text-text-primary">8</span>
+<span class="text-text-secondary text-sm">repositories</span>
+</div>
+<div class="mt-auto bg-status-amber/5 border border-status-amber/20 rounded-lg p-3 flex gap-3 items-start">
+<span class="material-symbols-outlined text-status-amber text-[18px] shrink-0 mt-0.5">warning</span>
+<p class="text-status-amber/90 text-xs leading-relaxed">
+                                    3 repositories exceeding size limits. Consider setting up lifecycle policies to clean up untagged images.
+                                </p>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</div>
+</body></html>

@@ -6,7 +6,7 @@ import EmptyState from '../ui/EmptyState';
 import { useClusterMetrics } from '../../hooks/useData';
 
 export default function MonitoringTab({ cluster }) {
-    const { data: metrics, loading } = useClusterMetrics(cluster?.id);
+    const { data: metrics, loading, error, refetch } = useClusterMetrics(cluster?.id);
 
     if (!cluster) {
         return (
@@ -17,6 +17,21 @@ export default function MonitoringTab({ cluster }) {
                         title="No Cluster Connected"
                         description="Connect a cluster to view detailed performance metrics."
                         action={{ label: 'Connect Cluster', onClick: () => window.location.href = '/onboarding' }}
+                    />
+                </Card>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="animate-fadeIn pb-10">
+                <Card className="bg-[rgba(244,63,94,0.05)] mt-6 border-dashed" style={{ borderColor: 'rgba(244,63,94,0.3)' }}>
+                    <EmptyState
+                        icon={Activity}
+                        title="Failed to Load Metrics"
+                        description="There was a problem fetching the performance metrics. Please try again."
+                        action={{ label: 'Retry', onClick: () => refetch() }}
                     />
                 </Card>
             </div>
