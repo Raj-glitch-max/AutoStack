@@ -1,4 +1,3 @@
-import { CORS_HEADERS } from '../_shared/cors.ts'
 /**
  * github-webhook/index.ts — GitHub Webhook Event Handler
  *
@@ -18,6 +17,7 @@ import { rateLimitCheck, rateLimitResponse } from '../_shared/rate-limiter.ts'
 
 const GITHUB_WEBHOOK_SECRET = Deno.env.get('GITHUB_WEBHOOK_SECRET')
 
+// Webhook-specific CORS headers (includes GitHub signature headers)
 const CORS_HEADERS: Record<string, string> = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -92,11 +92,6 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 200, headers: CORS_HEADERS })
   }
-
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: CORS_HEADERS })
-  }
-
 
   // Read body as text FIRST — required for HMAC verification before parsing
   const bodyText = await req.text();
