@@ -21,10 +21,10 @@ function TriggerRow({ n }) {
 
 export default function SettingsTab() {
     const [subTab, setSubTab] = useState('Cloud Access');
-    const { data: integrations, loading: intsLoading } = useIntegrations();
+    const { data: integrations, loading: intsLoading, error: intsError } = useIntegrations();
     const { user } = useAuth();
     const orgId = user?.user_metadata?.org_id;
-    const { data: members, loading: membersLoading } = useSupabaseQuery('org_members', {
+    const { data: members, loading: membersLoading, error: membersError } = useSupabaseQuery('org_members', {
         filters: orgId ? { org_id: orgId } : {},
         orderBy: 'created_at',
         ascending: true,
@@ -52,7 +52,20 @@ export default function SettingsTab() {
 
             {/* Settings Content Area */}
             <div className="flex-1 max-w-[720px]">
-                {subTab === 'Cloud Access' && (
+                {(intsError || membersError) && (
+                    <div className="animate-fadeIn pb-10">
+                        <Card className="bg-[rgba(244,63,94,0.05)] mt-6 border-dashed" style={{ borderColor: 'rgba(244,63,94,0.3)' }}>
+                            <EmptyState
+                                icon={ShieldAlert}
+                                title="Failed to Load Settings"
+                                description="There was a problem fetching your settings data. Please try again."
+                                action={{ label: 'Retry', onClick: () => window.location.reload() }}
+                            />
+                        </Card>
+                    </div>
+                )}
+
+                {!(intsError || membersError) && subTab === 'Cloud Access' && (
                     <div className="space-y-6 animate-fadeIn">
                         <div>
                             <h2 className="text-xl font-bold mb-1">Cloud Control Plane</h2>
@@ -111,7 +124,7 @@ export default function SettingsTab() {
                     </div>
                 )}
 
-                {subTab === 'Integrations' && (
+                {!(intsError || membersError) && subTab === 'Integrations' && (
                     <div className="space-y-6 animate-fadeIn">
                         <div>
                             <h2 className="text-xl font-bold mb-1">Integrations</h2>
@@ -152,7 +165,7 @@ export default function SettingsTab() {
                     </div>
                 )}
 
-                {subTab === 'Notifications' && (
+                {!(intsError || membersError) && subTab === 'Notifications' && (
                     <div className="space-y-6 animate-fadeIn">
                         <div><h2 className="text-xl font-bold">Alert Rules</h2></div>
                         <Card>
@@ -174,7 +187,7 @@ export default function SettingsTab() {
                     </div>
                 )}
 
-                {subTab === 'Team & Access' && (
+                {!(intsError || membersError) && subTab === 'Team & Access' && (
                     <div className="space-y-6 animate-fadeIn">
                         <div className="flex items-center justify-between">
                             <h2 className="text-xl font-bold">Team Members</h2>

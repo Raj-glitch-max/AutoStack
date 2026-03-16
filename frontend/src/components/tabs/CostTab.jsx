@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { DollarSign, TrendingDown, Zap, ShieldAlert, CheckCircle2, ArrowRight, Info, AlertTriangle, TrendingUp } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 import { Card, Button, Tag, StatusDot } from '../ui/index';
+import EmptyState from '../ui/EmptyState';
 
 const mockDailyCost = [
     { day: 'Mon', cost: 42, potential: 31 },
@@ -25,12 +26,14 @@ export default function CostTab({ cluster }) {
     const [budgets, setBudgets] = useState([]);
     const [anomalies, setAnomalies] = useState([]);
     const [riRecommendations, setRiRecommendations] = useState([]);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         fetchFinOpsData();
     }, [cluster]);
 
     const fetchFinOpsData = async () => {
+        setError(null);
         try {
             // Fetch budgets
             const budgetResp = await fetch('/rest/v1/cost_budgets?status=eq.active', {
@@ -63,6 +66,7 @@ export default function CostTab({ cluster }) {
             setRiRecommendations(riData || []);
         } catch (err) {
             console.error('Failed to fetch FinOps data:', err);
+            setError(err);
         } finally {
             // loading removed
         }
@@ -72,6 +76,21 @@ export default function CostTab({ cluster }) {
         setOptimizing(true);
         setTimeout(() => setOptimizing(false), 3000);
     };
+
+    if (error) {
+        return (
+            <div className="animate-fadeIn pb-10">
+                <Card className="bg-[rgba(244,63,94,0.05)] mt-6 border-dashed" style={{ borderColor: 'rgba(244,63,94,0.3)' }}>
+                    <EmptyState
+                        icon={AlertTriangle}
+                        title="Failed to Load FinOps Data"
+                        description="There was a problem fetching the cost optimization data. Please try again."
+                        action={{ label: 'Retry', onClick: () => fetchFinOpsData() }}
+                    />
+                </Card>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6 animate-fadeIn">
