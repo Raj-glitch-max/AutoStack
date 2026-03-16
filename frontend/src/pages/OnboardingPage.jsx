@@ -352,10 +352,6 @@ export default function OnboardingPage() {
                     ];
 
                     setProgress(stages.map((s, idx) => {
-                        const isDone = (provisioning_status === 'live') || 
-                                     (s.key && die_stage === s.key) || 
-                                     (s.keys && s.keys.some(k => die_stage?.includes(k)));
-                        
                         // Simple logic for progress: if a later stage is active, previous are done
                         const currentStageIdx = stages.findIndex(st => 
                             (st.key && die_stage === st.key) || 

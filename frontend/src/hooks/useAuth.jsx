@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, createContext, useContext } from 'react';
+import { useEffect, useCallback, createContext, useContext } from 'react';
 import { useUser, useAuth as useClerkAuth } from '@clerk/react';
 import { errorTracker } from '../lib/errorTracker';
 import { analytics } from '../lib/analytics';
@@ -8,11 +8,9 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
     const { isLoaded, user: clerkUser } = useUser();
     const { signOut: clerkSignOut } = useClerkAuth();
-    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (isLoaded) {
-            setLoading(false);
             if (clerkUser) {
                 errorTracker.setUser({ id: clerkUser.id, email: clerkUser.primaryEmailAddress?.emailAddress });
                 analytics.identify(clerkUser.id, {
@@ -33,7 +31,7 @@ export function AuthProvider({ children }) {
 
     const value = {
         user: clerkUser,
-        loading,
+        loading: !isLoaded,
         isAuthenticated: !!clerkUser,
         signOut,
         signIn: () => Promise.resolve(),
@@ -45,6 +43,7 @@ export function AuthProvider({ children }) {
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
     const ctx = useContext(AuthContext);
     if (!ctx) throw new Error('useAuth must be used within AuthProvider');

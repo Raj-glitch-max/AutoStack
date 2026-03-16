@@ -12,8 +12,7 @@ const LogsTab = lazy(() => import('./tabs/LogsTab'));
 const SettingsTab = lazy(() => import('./tabs/SettingsTab'));
 
 import { StatusDot } from './ui/index';
-import { useToast } from '../context/ToastContext';
-import { useAuth } from '../hooks/useAuth';
+// import { useAuth } from '../hooks/useAuth'; // removed if completely unused, wait let me just remove 15-16
 import { UserButton } from '@clerk/react';
 import { useClusters } from '../hooks/useData';
 import { SkeletonText } from './ui/Skeleton';
@@ -53,12 +52,10 @@ function DashboardCommandPalette({ isOpen, onClose, navItems, setActiveTab }) {
 export default function Dashboard() {
     const { tab } = useParams();
     const navigate = useNavigate();
-    const toast = useToast();
     const activeTab = tab || 'overview';
     const setActiveTab = (t) => navigate(`/dashboard/${t}`);
     const [cmdOpen, setCmdOpen] = useState(false);
 
-    const { user, signOut } = useAuth();
     const { data: clusters, loading: clustersLoading } = useClusters();
     const [activeClusterId, setActiveClusterId] = useState(null);
 
@@ -77,12 +74,6 @@ export default function Dashboard() {
     }, [clusters, clustersLoading, activeClusterId, activeTab, navigate]);
 
     const activeCluster = clusters?.find(c => c.id === activeClusterId);
-
-    const handleLogout = async () => {
-        await signOut();
-        toast.info('Signed out');
-        navigate('/');
-    };
 
     useEffect(() => {
         const handleKeyDown = (e) => {

@@ -3,14 +3,13 @@ import { ExternalLink, Plus, FolderGit2 } from 'lucide-react';
 import { Card, Button, StatusDot, Tag, ProgressBar, Modal, Input, Select } from '../ui/index';
 import { SkeletonCard, SkeletonRow, SkeletonText } from '../ui/Skeleton';
 import EmptyState from '../ui/EmptyState';
-import { useProjects, useSupabaseInsert } from '../../hooks/useData';
+import { useProjects } from '../../hooks/useData';
 import { useToast } from '../../context/ToastContext';
-import analytics from '../../lib/analytics';
+import { supabase } from '../../lib/supabase';
 
 /* ─── New Service Modal ─── */
 function NewServiceModal({ onClose, clusterId, onSuccess }) {
     const toast = useToast();
-    const { mutate: insertProject } = useSupabaseInsert('projects');
     const [step, setStep] = useState(0); // 0: input, 1: analyzing, 1.5: cost, 2: provisioning (progress), 3: success
     const [analysisData, setAnalysisData] = useState(null);
     const [form, setForm] = useState({
