@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Card, Button, Tag, ToggleSwitch } from '../ui/index';
-import { ShieldAlert, Cloud, PlugZap, Bell, Users, Plus, CheckCircle2 } from 'lucide-react';
+import { Card, Button, Tag, ToggleSwitch, ProgressBar } from '../ui/index';
+import { ShieldAlert, Cloud, PlugZap, Bell, Users, Plus, CheckCircle2, CreditCard } from 'lucide-react';
 import { useIntegrations, useSupabaseQuery } from '../../hooks/useData';
 import { useAuth } from '../../hooks/useAuth';
 import { SkeletonRow } from '../ui/Skeleton';
@@ -34,8 +34,9 @@ export default function SettingsTab() {
     const tabs = [
         { id: 'Cloud Access', icon: Cloud },
         { id: 'Integrations', icon: PlugZap },
-        { id: 'Security & Auth', icon: ShieldAlert },
+        { id: 'Notifications', icon: Bell },
         { id: 'Team & Access', icon: Users },
+        { id: 'Billing', icon: CreditCard },
     ];
 
     return (
@@ -230,6 +231,48 @@ export default function SettingsTab() {
                                 })
                             )}
                         </Card>
+                    </div>
+                )}
+
+                {!(intsError || membersError) && subTab === 'Billing' && (
+                    <div className="space-y-6 animate-fadeIn">
+                        <div>
+                            <h2 className="text-xl font-bold mb-1">Billing & Plans</h2>
+                            <p className="text-sm text-[var(--text-muted)]">Manage your AutoStack subscription and usage limits.</p>
+                        </div>
+                        <div className="flex flex-col md:flex-row gap-6">
+                            <Card className="flex-1 p-6 border-[var(--blue-primary)] border-2">
+                                <div className="flex justify-between items-start mb-6">
+                                    <div>
+                                        <Tag color="var(--blue-light)" className="mb-2">Current Plan</Tag>
+                                        <h3 className="text-2xl font-bold">Free Tier</h3>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="text-2xl font-black">$0<span className="text-sm font-normal text-[var(--text-muted)]">/mo</span></div>
+                                    </div>
+                                </div>
+                                <div className="space-y-4 mb-8">
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-[var(--text-muted)]">Environments</span>
+                                        <span className="font-medium">1 / 1 used</span>
+                                    </div>
+                                    <ProgressBar value={100} color="var(--blue-primary)" />
+                                    
+                                    <div className="flex justify-between text-sm mt-4">
+                                        <span className="text-[var(--text-muted)]">Team Members</span>
+                                        <span className="font-medium">1 / 3 used</span>
+                                    </div>
+                                    <ProgressBar value={33} color="var(--purple)" />
+                                </div>
+                                <Button className="w-full">Upgrade to Pro</Button>
+                            </Card>
+                            <Card className="flex-1 p-6 flex flex-col justify-center items-center text-center">
+                                <CreditCard size={48} className="text-[var(--text-dim)] mb-4" />
+                                <h3 className="font-bold mb-2">Payment Method</h3>
+                                <p className="text-sm text-[var(--text-muted)] mb-6">No payment method on file. Upgrade to a paid plan to add one.</p>
+                                <Button variant="secondary" onClick={() => window.open('https://billing.stripe.com/p/login/test_123', '_blank')}>Manage in Stripe</Button>
+                            </Card>
+                        </div>
                     </div>
                 )}
             </div>

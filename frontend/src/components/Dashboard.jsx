@@ -1,6 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, FolderGit2, GitBranch, Server, Activity, FileText, Settings, Search, Bell, ChevronDown, LogOut, DollarSign, Rocket } from 'lucide-react';
+import { LayoutDashboard, FolderGit2, GitBranch, Server, Activity, FileText, Settings, Search, Bell, ChevronDown, LogOut, DollarSign, Rocket, ShieldAlert } from 'lucide-react';
 
 // Lazy load tab components
 const EnvironmentsTab = lazy(() => import('./tabs/EnvironmentsTab'));
@@ -9,6 +9,7 @@ const CostTab = lazy(() => import('./tabs/CostTab'));
 const InfrastructureTab = lazy(() => import('./tabs/InfrastructureTab'));
 const MonitoringTab = lazy(() => import('./tabs/MonitoringTab'));
 const LogsTab = lazy(() => import('./tabs/LogsTab'));
+const IncidentsTab = lazy(() => import('./tabs/IncidentsTab'));
 const SettingsTab = lazy(() => import('./tabs/SettingsTab'));
 
 import { StatusDot } from './ui/index';
@@ -98,6 +99,7 @@ export default function Dashboard() {
         { id: 'infrastructure', label: 'Infra Map', icon: LayoutDashboard },
         { id: 'monitoring', label: 'Observability', icon: Activity },
         { id: 'logs', label: 'Global Logs', icon: FileText },
+        { id: 'incidents', label: 'Incidents', icon: ShieldAlert },
     ];
 
     const currentTabName = [...navItems, { id: 'settings', label: 'Settings' }].find(t => t.id === activeTab)?.label;
@@ -231,6 +233,7 @@ export default function Dashboard() {
                             {activeTab === 'infrastructure' && <InfrastructureTab cluster={activeCluster} />}
                             {activeTab === 'monitoring' && <MonitoringTab cluster={activeCluster} />}
                             {activeTab === 'logs' && <LogsTab cluster={activeCluster} />}
+                            {activeTab === 'incidents' && <IncidentsTab cluster={activeCluster} />}
                             {activeTab === 'settings' && <SettingsTab cluster={activeCluster} />}
                         </Suspense>
                     </TabErrorBoundary>

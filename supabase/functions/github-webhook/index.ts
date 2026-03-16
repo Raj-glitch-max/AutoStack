@@ -349,7 +349,8 @@ async function handlePullRequest(supabase: any, payload: any) {
 }
 
 async function handleWorkflowRun(supabase: any, payload: any) {
-  if (payload.action !== 'completed') return;
+  const action = payload.action;
+  if (!['requested', 'in_progress', 'completed'].includes(action)) return;
 
   const run = payload.workflow_run;
 
@@ -364,16 +365,22 @@ async function handleWorkflowRun(supabase: any, payload: any) {
 
   if (!project) return;
 
+  const statusMap: Record<string, string> = {
+    'requested': 'queued',
+    'in_progress': 'running',
+    'completed': run.conclusion || 'success'
+  };
+
   await supabase.from('pipelines').upsert({
     project_id: project.id,
     cluster_id: project.cluster_id,
     github_run_id: String(run.id),
     branch: run.head_branch,
     commit_sha: run.head_sha,
-    status: run.conclusion, // 'success' | 'failure' | 'cancelled' | 'skipped'
-    duration_ms: new Date(run.updated_at).getTime() - new Date(run.created_at).getTime(),
+    status: statusMap[action] || run.status,
+    duration_ms: action === 'completed' ? new Date(run.updated_at).getTime() - new Date(run.created_at).getTime() : null,
     started_at: run.created_at,
-    completed_at: run.updated_at,
+    completed_at: action === 'completed' ? run.updated_at : null,
   }, { onConflict: 'github_run_id' });
 }
 

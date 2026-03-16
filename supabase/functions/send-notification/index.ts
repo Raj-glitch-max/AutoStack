@@ -276,13 +276,13 @@ async function buildEmail(type: string, payload: any, name: string, org_id: stri
                 html: `
                     <div style="font-family: sans-serif; max-width: 600px;">
                         <h2 style="color: #6366f1;">You're Invited! 🎉</h2>
-                        <p><strong>${payload.inviter_name}</strong> has invited you to join <strong>${payload.org_name}</strong> on AutoStack.</p>
+                        <p>You have been invited to join <strong>${payload.org_name}</strong> on AutoStack.</p>
                         <div style="background: #eef2ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
                             <p style="margin: 0;"><strong>Role:</strong> ${payload.role || 'Member'}</p>
                             <p style="margin: 8px 0 0 0;"><strong>Organization:</strong> ${payload.org_name}</p>
                         </div>
                         <br/>
-                        <a href="${payload.invite_url || `${APP_URL}/signup`}" style="background: #6366f1; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">Accept Invitation →</a>
+                        <a href="${APP_URL}/signup?invite=${payload.token}" style="background: #6366f1; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">Accept Invitation →</a>
                         <p style="margin-top: 20px; color: #666;">This invitation expires in 7 days.</p>
                         ${footer}
                     </div>
