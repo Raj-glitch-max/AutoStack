@@ -4,6 +4,10 @@ on:
   repository_dispatch:
     types: [provision-infra]
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   provision:
     runs-on: ubuntu-latest
