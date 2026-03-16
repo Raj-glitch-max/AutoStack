@@ -1,86 +1,107 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { getInstallationToken } from '../_shared/github.ts'
 import { CORS_HEADERS, corsResponse, errorResponse, jsonResponse } from '../_shared/cors.ts'
-import { createRedisClient, RedisClient } from '../_shared/redis.ts'
+import { createRedisClient } from '../_shared/redis.ts'
 import { validateOrRespond } from '../_shared/validator.ts'
+import { classifyApplication, AppClassification } from '../_shared/app-classifier.ts'
 
 // ---------------------------------------------------------------------------
-// Framework Detection Tree — reads file contents, not just filenames
+// Parallel File Fetcher — PERFORMANCE CRITICAL
 // ---------------------------------------------------------------------------
 
-interface StackDetection {
-  language: string
-  framework: string
-  type: 'web-service' | 'api' | 'worker' | 'static'
-  port: number
-  buildCmd: string
-  startCmd: string
-}
+async function fetchRepositoryFiles(
+  owner: string,
+  repo: string,
+  branch: string,
+  token: string
+): Promise<{ files: Map<string, string>; fileCount: number; repoSize: number }> {
+  const headers = {
+    'Authorization': `Bearer ${token}`,
+    'User-Agent': 'AutoStack-App',
+    'Accept': 'application/vnd.github+json'
+  }
 
-async function fetchFileContent(owner: string, repo: string, path: string, token: string, branch: string): Promise<string | null> {
-  const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`, {
-    headers: { 'Authorization': `Bearer ${token}`, 'User-Agent': 'AutoStack-App', 'Accept': 'application/vnd.github.raw' }
+  // Get file tree (one API call)
+  const treeRes = await fetch(
+    `https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`,
+    { headers }
+  )
+
+  if (!treeRes.ok) {
+    if (treeRes.status === 404) {
+      throw new Error('GITHUB_APP_NOT_INSTALLED')
+    }
+    throw new Error(`GitHub API error: ${treeRes.statusText}`)
+  }
+
+  const treeData = await treeRes.json()
+  const tree = treeData.tree || []
+
+  // Target config files to fetch
+  const targetFiles = [
+    'package.json', 'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml',
+    'requirements.txt', 'pyproject.toml', 'setup.py', 'Pipfile',
+    'go.mod', 'go.sum',
+    'pom.xml', 'build.gradle', 'build.gradle.kts',
+    'Gemfile', 'Gemfile.lock',
+    'Cargo.toml',
+    'composer.json',
+    'Dockerfile', 'docker-compose.yml',
+    '.nvmrc', '.node-version', '.python-version', '.ruby-version',
+    'Procfile',
+    'next.config.js', 'next.config.mjs', 'next.config.ts',
+    'vite.config.js', 'vite.config.ts',
+    'angular.json',
+    'nuxt.config.js', 'nuxt.config.ts',
+  ]
+
+  const existingFiles = tree
+    .filter((f: any) => targetFiles.includes(f.path) && f.type === 'blob')
+    .map((f: any) => f.path)
+
+  // Fetch all files IN PARALLEL (critical performance optimization)
+  const fetchPromises = existingFiles.map(async (filename: string) => {
+    try {
+      const res = await fetch(
+        `https://api.github.com/repos/${owner}/${repo}/contents/${filename}?ref=${branch}`,
+        { headers }
+      )
+      if (!res.ok) return [filename, null]
+      
+      const data = await res.json()
+      const content = atob(data.content.replace(/\n/g, ''))
+      return [filename, content]
+    } catch {
+      return [filename, null]
+    }
   })
-  if (!res.ok) return null
-  return await res.text()
-}
 
-async function detectStack(owner: string, repo: string, filenames: string[], token: string, branch: string): Promise<StackDetection> {
-  // Node.js ecosystem — parse package.json to detect framework
-  if (filenames.includes('package.json')) {
-    const raw = await fetchFileContent(owner, repo, 'package.json', token, branch)
-    if (raw) {
-      try {
-        const pkg = JSON.parse(raw)
-        const allDeps = { ...pkg.dependencies, ...pkg.devDependencies }
+  const results = await Promise.allSettled(fetchPromises)
+  const fileMap = new Map<string, string>()
 
-        if (allDeps['next'])      return { language: 'Node.js', framework: 'Next.js', type: 'web-service', port: 3000, buildCmd: 'npm run build', startCmd: 'npm start' }
-        if (allDeps['nuxt'])      return { language: 'Node.js', framework: 'Nuxt.js', type: 'web-service', port: 3000, buildCmd: 'npm run build', startCmd: 'npm start' }
-        if (allDeps['@nestjs/core']) return { language: 'Node.js', framework: 'NestJS', type: 'api', port: 3000, buildCmd: 'npm run build', startCmd: 'node dist/main' }
-        if (allDeps['fastify'])   return { language: 'Node.js', framework: 'Fastify', type: 'api', port: 3000, buildCmd: 'npm run build', startCmd: 'npm start' }
-        if (allDeps['express'])   return { language: 'Node.js', framework: 'Express', type: 'api', port: 3000, buildCmd: '', startCmd: 'npm start' }
-        if (allDeps['koa'])       return { language: 'Node.js', framework: 'Koa', type: 'api', port: 3000, buildCmd: '', startCmd: 'npm start' }
-        if (allDeps['react'] || allDeps['vue'] || allDeps['@angular/core']) {
-          return { language: 'Node.js', framework: allDeps['react'] ? 'React SPA' : allDeps['vue'] ? 'Vue SPA' : 'Angular SPA', type: 'static', port: 80, buildCmd: 'npm run build', startCmd: 'nginx -g "daemon off;"' }
-        }
-
-        return { language: 'Node.js', framework: 'Node.js', type: 'web-service', port: 3000, buildCmd: '', startCmd: 'npm start' }
-      } catch { /* parse error, fall through */ }
+  for (const result of results) {
+    if (result.status === 'fulfilled' && result.value[1]) {
+      fileMap.set(result.value[0] as string, result.value[1] as string)
     }
   }
 
-  // Python ecosystem
-  if (filenames.includes('requirements.txt') || filenames.includes('pyproject.toml') || filenames.includes('Pipfile')) {
-    const reqs = await fetchFileContent(owner, repo, 'requirements.txt', token, branch) || ''
+  const repoSize = tree.reduce((sum: number, f: any) => sum + (f.size || 0), 0)
+  const fileCount = tree.length
 
-    if (reqs.includes('django'))     return { language: 'Python', framework: 'Django', type: 'web-service', port: 8000, buildCmd: 'pip install -r requirements.txt', startCmd: 'gunicorn app.wsgi:application' }
-    if (reqs.includes('fastapi'))    return { language: 'Python', framework: 'FastAPI', type: 'api', port: 8000, buildCmd: 'pip install -r requirements.txt', startCmd: 'uvicorn main:app --host 0.0.0.0 --port 8000' }
-    if (reqs.includes('flask'))      return { language: 'Python', framework: 'Flask', type: 'api', port: 5000, buildCmd: 'pip install -r requirements.txt', startCmd: 'gunicorn app:app' }
-
-    return { language: 'Python', framework: 'Python', type: 'web-service', port: 8000, buildCmd: 'pip install -r requirements.txt', startCmd: 'python app.py' }
-  }
-
-  // Go
-  if (filenames.includes('go.mod'))  return { language: 'Go', framework: 'Go', type: 'api', port: 8080, buildCmd: 'go build -o main .', startCmd: './main' }
-
-  // Java
-  if (filenames.includes('pom.xml')) return { language: 'Java', framework: 'Spring Boot', type: 'web-service', port: 8080, buildCmd: 'mvn -B package', startCmd: 'java -jar target/*.jar' }
-  if (filenames.includes('build.gradle')) return { language: 'Java', framework: 'Spring Boot (Gradle)', type: 'web-service', port: 8080, buildCmd: './gradlew build', startCmd: 'java -jar build/libs/*.jar' }
-
-  // Rust
-  if (filenames.includes('Cargo.toml')) return { language: 'Rust', framework: 'Rust', type: 'api', port: 8080, buildCmd: 'cargo build --release', startCmd: './target/release/app' }
-
-  // Docker-only
-  if (filenames.includes('Dockerfile')) return { language: 'Docker', framework: 'Custom', type: 'web-service', port: 8080, buildCmd: '', startCmd: '' }
-
-  return { language: 'Unknown', framework: 'Unknown', type: 'web-service', port: 8080, buildCmd: '', startCmd: '' }
+  return { files: fileMap, fileCount, repoSize }
 }
 
 // ---------------------------------------------------------------------------
 // Manifest Generation — 7 K8s/Docker files
 // ---------------------------------------------------------------------------
 
-function generateDockerfile(stack: StackDetection): string | null {
+function generateDockerfile(classification: AppClassification): string | null {
+  const stack = {
+    language: classification.language,
+    framework: classification.framework,
+    port: classification.port,
+    startCmd: classification.startCommand
+  }
   switch (stack.language) {
     case 'Node.js':
       if (stack.framework === 'Next.js') {
@@ -165,7 +186,7 @@ CMD ["app"]`
   }
 }
 
-function generateK8sDeployment(projectName: string, stack: StackDetection): string {
+function generateK8sDeployment(projectName: string, classification: AppClassification): string {
   return `apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -187,24 +208,24 @@ spec:
         - name: ${projectName}
           image: IMAGE_PLACEHOLDER
           ports:
-            - containerPort: ${stack.port}
+            - containerPort: ${classification.port}
           resources:
             requests:
-              cpu: "100m"
-              memory: "128Mi"
+              cpu: "${classification.estimatedCPU}m"
+              memory: "${classification.estimatedMemory}Mi"
             limits:
-              cpu: "500m"
-              memory: "512Mi"
+              cpu: "${classification.estimatedCPU * 2}m"
+              memory: "${classification.estimatedMemory * 2}Mi"
           livenessProbe:
             httpGet:
-              path: /
-              port: ${stack.port}
+              path: ${classification.healthCheckPath}
+              port: ${classification.port}
             initialDelaySeconds: 15
             periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /
-              port: ${stack.port}
+              path: ${classification.healthCheckPath}
+              port: ${classification.port}
             initialDelaySeconds: 5
             periodSeconds: 5
           securityContext:
@@ -213,7 +234,7 @@ spec:
             allowPrivilegeEscalation: false`
 }
 
-function generateK8sService(projectName: string, stack: StackDetection): string {
+function generateK8sService(projectName: string, classification: AppClassification): string {
   return `apiVersion: v1
 kind: Service
 metadata:
@@ -225,7 +246,7 @@ spec:
   type: ClusterIP
   ports:
     - port: 80
-      targetPort: ${stack.port}
+      targetPort: ${classification.port}
       protocol: TCP
   selector:
     app: ${projectName}`
@@ -344,7 +365,7 @@ async function openManifestPR(
   branch: string,
   token: string,
   files: { path: string; content: string }[],
-  stack: StackDetection
+  classification: AppClassification
 ): Promise<string> {
   const prBranch = 'autostack/initial-setup'
   const headers = {
@@ -392,7 +413,7 @@ async function openManifestPR(
     method: 'POST',
     headers,
     body: JSON.stringify({
-      message: `chore(autostack): add Kubernetes manifests for ${stack.framework} deployment\n\nGenerated by AutoStack DIE Engine.\nStack: ${stack.language}/${stack.framework}\n\n[autostack-skip]`,
+      message: `chore(autostack): add infrastructure for ${classification.framework} deployment\n\nGenerated by AutoStack.\nStack: ${classification.language}/${classification.framework}\nService: ${classification.recommendedService}\nEstimated cost: ${classification.monthlyEstimate.displayPrice}\n\n[autostack-skip]`,
       tree: tree.sha,
       parents: [baseSha]
     })
@@ -421,16 +442,30 @@ async function openManifestPR(
     method: 'POST',
     headers,
     body: JSON.stringify({
-      title: `[AutoStack] Add Kubernetes infrastructure for ${stack.framework}`,
+      title: `[AutoStack] Add infrastructure for ${classification.framework}`,
       body: `## 🚀 AutoStack Infrastructure Setup
 
-This PR was generated by the **AutoStack Deep Infrastructure Engine (DIE)**.
+This PR was generated by **AutoStack**.
 
 ### Detected Stack
-- **Language**: ${stack.language}
-- **Framework**: ${stack.framework}
-- **Type**: ${stack.type}
-- **Port**: ${stack.port}
+- **Language**: ${classification.language}
+- **Framework**: ${classification.framework}
+- **Type**: ${classification.appType}
+- **Port**: ${classification.port}
+- **Service**: ${classification.recommendedService}
+
+### Cost Estimate
+${classification.monthlyEstimate.displayPrice}
+
+**Breakdown:**
+${classification.monthlyEstimate.breakdown.map(item => 
+  `- ${item.component}: $${item.monthlyCost}/month — ${item.note}`
+).join('\n')}
+
+${classification.monthlyEstimate.savingsVsEKS > 10 ? 
+  `\n💰 **Savings**: AutoStack selected ${classification.recommendedService} instead of EKS, saving you $${Math.round(classification.monthlyEstimate.savingsVsEKS)}/month.\n` : 
+  ''
+}
 
 ### Files Added
 ${files.map(f => `- \`${f.path}\``).join('\n')}
@@ -463,40 +498,13 @@ ${files.map(f => `- \`${f.path}\``).join('\n')}
 }
 
 // ---------------------------------------------------------------------------
-// Cost Calculator
-// ---------------------------------------------------------------------------
-
-function calculateCost(size: string, stack: StackDetection) {
-  const config: Record<string, { base: number; vcpu: string; ram: string; nodes: number }> = {
-    'small':  { base: 127, vcpu: '2', ram: '4GB',  nodes: 2 },
-    'medium': { base: 285, vcpu: '4', ram: '16GB', nodes: 3 },
-    'large':  { base: 640, vcpu: '8', ram: '32GB', nodes: 5 }
-  }
-
-  const selected = config[size] || config.small
-  const clusterCost = selected.base
-  const albCost = 22
-  const natCost = 35
-  const ecrCost = 2
-
-  return {
-    total: clusterCost + albCost + natCost + ecrCost,
-    resources: [
-      { name: `EKS Cluster (${selected.nodes} × t3.${selected.base === 127 ? 'medium' : 'large'})`, cost: clusterCost },
-      { name: 'Application Load Balancer', cost: albCost },
-      { name: 'NAT Gateway', cost: natCost },
-      { name: 'ECR / Image Storage', cost: ecrCost }
-    ],
-    specs: { vcpu: selected.vcpu, ram: selected.ram, nodes: selected.nodes }
-  }
-}
-
-// ---------------------------------------------------------------------------
 // Main Handler
 // ---------------------------------------------------------------------------
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return corsResponse()
+
+  const startTime = Date.now()
 
   try {
     const supabaseClient = createClient(
@@ -517,11 +525,10 @@ Deno.serve(async (req) => {
     const validationError = validateOrRespond(body, {
       project_id: { type: 'uuid', required: true },
       installation_id: { type: 'string', required: true },
-      size: { type: 'string', enum: ['small', 'medium', 'large'], default: 'small' }
     }, CORS_HEADERS)
     if (validationError) return validationError
 
-    const { project_id, installation_id, size } = body
+    const { project_id, installation_id } = body
 
     // Stage 1: Load project
     const { data: project, error: projectErr } = await supabaseClient
@@ -537,7 +544,7 @@ Deno.serve(async (req) => {
 
     await supabaseClient.from('projects').update({ analysis_status: 'analyzing' }).eq('id', project_id)
 
-    // GitHub — get installation token and fetch tree
+    // GitHub — get installation token
     let token: string
     try {
       token = await getInstallationToken(installation_id, redis)
@@ -554,111 +561,163 @@ Deno.serve(async (req) => {
     const [owner, repo] = repoPath.split('/')
     const branch = project.branch || 'main'
 
-    // Fetch tree first level
-    const treeRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=0`, {
-      headers: { 'Authorization': `Bearer ${token}`, 'User-Agent': 'AutoStack-App' }
-    })
-
-    if (!treeRes.ok) {
-      if (treeRes.status === 404) {
-        return errorResponse(404, 'Repository not found or AutoStack GitHub App not installed. Install at https://github.com/apps/autostack', 'GITHUB_APP_NOT_INSTALLED')
-      }
-      throw new Error(`GitHub API error: ${treeRes.statusText}`)
-    }
-
-    const treeData = await treeRes.json()
-    const filenames: string[] = (treeData.tree || []).map((f: any) => f.path)
-
-    // Stage 2: Detect stack (reads file contents)
-    const stack = await detectStack(owner, repo, filenames, token, branch)
-    const hasExistingDockerfile = filenames.includes('Dockerfile')
-
-    await supabaseClient.from('projects').update({ analysis_status: 'planning', stack: `${stack.language}/${stack.framework}` }).eq('id', project_id)
-
-    // Stage 3: Generate manifests
-    const projectName = repo.toLowerCase().replace(/[^a-z0-9-]/g, '-')
-    const manifestFiles: { path: string; content: string }[] = []
-
-    if (!hasExistingDockerfile) {
-      const dockerfile = generateDockerfile(stack)
-      if (dockerfile) manifestFiles.push({ path: 'Dockerfile', content: dockerfile })
-    }
-
-    manifestFiles.push(
-      { path: 'k8s/deployment.yaml', content: generateK8sDeployment(projectName, stack) },
-      { path: 'k8s/service.yaml', content: generateK8sService(projectName, stack) },
-      { path: 'k8s/ingress.yaml', content: generateIngress(projectName) },
-      { path: 'k8s/hpa.yaml', content: generateHPA(projectName) },
-      { path: 'k8s/networkpolicy.yaml', content: generateNetworkPolicy(projectName) },
-      { path: 'k8s/argocd-application.yaml', content: generateArgoApp(projectName, project.repo_url, branch) }
-    )
-
-    // Stage 4: Open PR (real GitHub API)
-    let prUrl: string
+    // Stage 2: Fetch repository files IN PARALLEL (performance critical)
+    console.log(`[DIE] Fetching files for ${owner}/${repo}...`)
+    const fetchStart = Date.now()
+    
+    let files: Map<string, string>
+    let fileCount: number
+    let repoSize: number
+    
     try {
-      prUrl = await openManifestPR(owner, repo, branch, token, manifestFiles, stack)
+      const result = await fetchRepositoryFiles(owner, repo, branch, token)
+      files = result.files
+      fileCount = result.fileCount
+      repoSize = result.repoSize
     } catch (err) {
       const msg = (err as Error).message
       if (msg.includes('GITHUB_APP_NOT_INSTALLED')) {
-        return errorResponse(404, msg, 'GITHUB_APP_NOT_INSTALLED')
+        return errorResponse(404, 'Repository not found or AutoStack GitHub App not installed. Install at https://github.com/apps/autostack', 'GITHUB_APP_NOT_INSTALLED')
       }
-      console.error('[DIE] PR creation failed:', msg)
-      prUrl = '' // Will be flagged in the response
+      throw err
     }
 
-    // Stage 5: Cost estimation
-    const costPlan = calculateCost(size, stack)
+    const fetchDuration = Date.now() - fetchStart
+    console.log(`[DIE] Fetched ${files.size} files in ${fetchDuration}ms`)
 
-    // Update project with full analysis results
+    // Stage 3: Classify application (intelligent analysis)
+    console.log(`[DIE] Classifying application...`)
+    const classifyStart = Date.now()
+    const classification = await classifyApplication(files, repoSize, fileCount)
+    const classifyDuration = Date.now() - classifyStart
+    console.log(`[DIE] Classification complete in ${classifyDuration}ms: ${classification.framework} → ${classification.recommendedService}`)
+
+    await supabaseClient.from('projects').update({ 
+      analysis_status: 'planning', 
+      stack: `${classification.language}/${classification.framework}` 
+    }).eq('id', project_id)
+
+    // Stage 4: Generate manifests
+    const projectName = repo.toLowerCase().replace(/[^a-z0-9-]/g, '-')
+    const manifestFiles: { path: string; content: string }[] = []
+
+    const hasExistingDockerfile = files.has('Dockerfile')
+    if (!hasExistingDockerfile) {
+      const dockerfile = generateDockerfile(classification)
+      if (dockerfile) manifestFiles.push({ path: 'Dockerfile', content: dockerfile })
+    }
+
+    // Only generate K8s manifests if using EKS
+    if (classification.recommendedService.includes('eks')) {
+      manifestFiles.push(
+        { path: 'k8s/deployment.yaml', content: generateK8sDeployment(projectName, classification) },
+        { path: 'k8s/service.yaml', content: generateK8sService(projectName, classification) },
+        { path: 'k8s/ingress.yaml', content: generateIngress(projectName) },
+        { path: 'k8s/hpa.yaml', content: generateHPA(projectName) },
+        { path: 'k8s/networkpolicy.yaml', content: generateNetworkPolicy(projectName) },
+        { path: 'k8s/argocd-application.yaml', content: generateArgoApp(projectName, project.repo_url, branch) }
+      )
+    }
+
+    // Stage 5: Open PR (if manifests were generated)
+    let prUrl = ''
+    if (manifestFiles.length > 0) {
+      try {
+        prUrl = await openManifestPR(owner, repo, branch, token, manifestFiles, classification)
+      } catch (err) {
+        const msg = (err as Error).message
+        if (msg.includes('GITHUB_APP_NOT_INSTALLED')) {
+          return errorResponse(404, msg, 'GITHUB_APP_NOT_INSTALLED')
+        }
+        console.error('[DIE] PR creation failed:', msg)
+      }
+    }
+
+    // Stage 6: Generate infrastructure options (3 choices)
+    console.log(`[DIE] Generating infrastructure options...`)
+    let infrastructureOptions = null
+    
+    try {
+      const optionsRes = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/optimize-cost`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          classification,
+          org_budget_preference: null
+        })
+      })
+      
+      if (optionsRes.ok) {
+        infrastructureOptions = await optionsRes.json()
+      }
+    } catch (err) {
+      console.error('[DIE] Failed to generate infrastructure options:', err)
+    }
+
+    // Stage 7: Update project with analysis results
     await supabaseClient.from('projects').update({
       analysis_status: 'analyzed',
-      stack: `${stack.language}/${stack.framework}`,
-      estimated_monthly_cost: costPlan.total,
+      stack: `${classification.language}/${classification.framework}`,
+      estimated_monthly_cost: classification.monthlyEstimate.monthlyTypical,
       infra_plan_json: {
-        size,
-        stack,
-        resources: costPlan.resources,
+        classification,
+        infrastructure_options: infrastructureOptions,
         manifests_generated: manifestFiles.length,
-        has_existing_dockerfile: hasExistingDockerfile
+        has_existing_dockerfile: hasExistingDockerfile,
+        analysis_duration_ms: Date.now() - startTime
       }
     }).eq('id', project_id)
 
-    // Stage 6: Create deployment record with pr_url
+    // Stage 8: Create deployment record
     const { data: deployment, error: deployErr } = await supabaseClient.from('deployments').insert({
       project_id,
       org_id: project.org_id,
-      status: 'in_progress',
-      stage: 'planning',
+      status: 'pending',
+      stage: 'analyzed',
       pr_url: prUrl || null,
-      commit_msg: `AutoStack: ${stack.framework} deployment setup`
+      commit_msg: `AutoStack: ${classification.framework} deployment setup`
     }).select().single()
 
     if (deployErr) throw deployErr
 
-    // Stage 7: Trigger infra-provision asynchronously
-    fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/infra-provision`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        deployment_id: deployment.id,
-        project_id: project.id,
-        plan: costPlan
-      })
-    }).catch(err => console.error('[DIE] Async infra trigger failed:', err))
-
-    console.log(`[DIE] Analysis complete for ${owner}/${repo}. Stack: ${stack.framework}. PR: ${prUrl}`)
+    const totalDuration = Date.now() - startTime
+    console.log(`[DIE] Analysis complete for ${owner}/${repo} in ${totalDuration}ms. Stack: ${classification.framework}, Service: ${classification.recommendedService}, Cost: ${classification.monthlyEstimate.displayPrice}`)
 
     return jsonResponse({
       success: true,
       deployment_id: deployment.id,
-      stack: `${stack.language}/${stack.framework}`,
-      estimated_cost: costPlan.total,
+      classification: {
+        language: classification.language,
+        framework: classification.framework,
+        appType: classification.appType,
+        tier: classification.tier,
+        recommendedService: classification.recommendedService,
+        buildCommand: classification.buildCommand,
+        startCommand: classification.startCommand,
+        port: classification.port,
+        healthCheckPath: classification.healthCheckPath,
+      },
+      cost_estimate: {
+        service: classification.monthlyEstimate.service,
+        monthlyMin: classification.monthlyEstimate.monthlyMin,
+        monthlyTypical: classification.monthlyEstimate.monthlyTypical,
+        monthlyMax: classification.monthlyEstimate.monthlyMax,
+        displayPrice: classification.monthlyEstimate.displayPrice,
+        breakdown: classification.monthlyEstimate.breakdown,
+        savingsVsEKS: classification.monthlyEstimate.savingsVsEKS,
+      },
+      infrastructure_options: infrastructureOptions,
       pr_url: prUrl,
       manifests_generated: manifestFiles.map(f => f.path),
-      infra_plan_json: { size, stack, resources: costPlan.resources }
+      analysis_duration_ms: totalDuration,
+      performance: {
+        fetch_ms: fetchDuration,
+        classify_ms: classifyDuration,
+        total_ms: totalDuration
+      }
     })
 
   } catch (error) {

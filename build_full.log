@@ -1,0 +1,47 @@
+Some networks were defined but are not used by any service: autostack-network
+Building autostack-frontend
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+
+Sending build context to Docker daemon  313.9MB
+Step 1/11 : FROM node:22-alpine AS build
+ ---> be1a50ca7b74
+Step 2/11 : WORKDIR /app
+ ---> Using cache
+ ---> f794940e125e
+Step 3/11 : COPY package*.json ./
+ ---> Using cache
+ ---> b1a2f00f5495
+Step 4/11 : RUN npm install
+ ---> Using cache
+ ---> f705b581e2c2
+Step 5/11 : COPY . .
+ ---> 513b9a6205a4
+Step 6/11 : RUN npm run build
+ ---> Running in 7aed7ebbcca0
+
+> frontend@0.0.0 build
+> vite build
+
+vite v7.3.1 building client environment for production...
+transforming...
+✓ 146 modules transformed.
+[91m✗ Build failed in 830ms
+[0m[91merror during build:
+[vite]: Rollup failed to resolve import "date-fns" from "/app/src/components/tabs/IncidentsTab.jsx".
+This is most likely unintended because it can break your application at runtime.
+If you do want to externalize this module explicitly add it to
+`build.rollupOptions.external`
+    at viteLog (file:///app/node_modules/vite/dist/node/chunks/config.js:33635:57)
+    at file:///app/node_modules/vite/dist/node/chunks/config.js:33669:73
+    at onwarn (file:///app/node_modules/@vitejs/plugin-react/dist/index.js:76:7)
+    at file:///app/node_modules/vite/dist/node/chunks/config.js:33669:28
+    at onRollupLog (file:///app/node_modules/vite/dist/node/chunks/config.js:33664:63)
+    at onLog (file:///app/node_modules/vite/dist/node/chunks/config.js:33467:4)
+    at file:///app/node_modules/rollup/dist/es/shared/node-entry.js:20981:32
+    at Object.logger [as onLog] (file:///app/node_modules/rollup/dist/es/shared/node-entry.js:22968:9)
+    at ModuleLoader.handleInvalidResolvedId (file:///app/node_modules/rollup/dist/es/shared/node-entry.js:21712:26)
+    at file:///app/node_modules/rollup/dist/es/shared/node-entry.js:21670:26
+[0mThe command '/bin/sh -c npm run build' returned a non-zero code: 1
+Service 'autostack-frontend' failed to build : Build failed

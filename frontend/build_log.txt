@@ -1,0 +1,5 @@
+Some networks were defined but are not used by any service: autostack-network
+Creating autostack_autostack-frontend_run ... 
+Creating autostack_autostack-frontend_run ... done
+/bin/sh: npm: not found
+127

@@ -102,9 +102,9 @@ function NewServiceModal({ onClose, clusterId, onSuccess }) {
                         <div className="flex-1">
                             <label className="block text-xs font-semibold text-[var(--text-muted)] mb-1.5 uppercase">Profile</label>
                             <Select options={[
-                                { value: 'small', label: 'Small (~$187/mo)' }, 
-                                { value: 'medium', label: 'Medium (~$345/mo)' },
-                                { value: 'large', label: 'Large (~$700/mo)' }
+                                { value: 'small', label: 'Small (~$211/mo) - 2 nodes' }, 
+                                { value: 'medium', label: 'Medium (~$334/mo) - 3 nodes' },
+                                { value: 'large', label: 'Large (~$559/mo) - 4 nodes' }
                             ]} value={form.size} onChange={e => setForm({ ...form, size: e.target.value })} />
                         </div>
                     </div>

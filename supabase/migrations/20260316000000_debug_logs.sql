@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS public.debug_logs (id uuid primary key default gen_random_uuid(), created_at timestamptz default now(), level text, source text, message text, metadata jsonb); ALTER TABLE public.debug_logs DISABLE ROW LEVEL SECURITY; GRANT ALL ON public.debug_logs TO service_role; GRANT ALL ON public.debug_logs TO anon; GRANT ALL ON public.debug_logs TO authenticated;

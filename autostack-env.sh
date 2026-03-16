@@ -1,0 +1,28 @@
+#!/bin/bash
+# AutoStack Environment Variables
+
+export SUPABASE_URL="https://prrmrukwmrjkdxcyzovd.supabase.co"
+export SUPABASE_PROJECT_REF="prrmrukwmrjkdxcyzovd"
+export SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBycm1ydWt3bXJqa2R4Y3l6b3ZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzODE5NjIsImV4cCI6MjA4ODk1Nzk2Mn0.Zd5P26Ay5lfOb7KpTfRtO4Zg50kAmasPlXIjykpYf7I"
+export SUPABASE_SERVICE_ROLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBycm1ydWt3bXJqa2R4Y3l6b3ZkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MzM4MTk2MiwiZXhwIjoyMDg4OTU3OTYyfQ.oEnIj-ASGRJGVxcB265PTwTdR5n1q8cO3QVGB6vYu_k"
+
+export AWS_ACCOUNT_ID="367749063363"
+export AWS_REGION="us-east-1"
+
+export GITHUB_APP_ID="3089423"
+export GITHUB_CLIENT_ID="Iv23liJqxqxqxqxq"
+export GITHUB_CLIENT_SECRET="your_github_client_secret"
+export GITHUB_WEBHOOK_SECRET="your_webhook_secret"
+
+export RESEND_API_KEY="re_your_resend_key"
+export UPSTASH_REDIS_REST_URL="https://your-redis.upstash.io"
+export UPSTASH_REDIS_REST_TOKEN="your_redis_token"
+
+export NVIDIA_API_KEY_1="nvapi_your_key_1"
+export NVIDIA_API_KEY_2="nvapi_your_key_2"
+
+export POSTHOG_KEY="phc_your_posthog_key"
+export SENTRY_DSN="https://your_sentry_dsn"
+
+export STRIPE_SECRET_KEY="sk_test_your_stripe_key"
+export STRIPE_WEBHOOK_SECRET="whsec_your_webhook_secret"

@@ -9,12 +9,9 @@ services:
       - "3000:80"
     env_file:
       - .env.docker
-    restart: always
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    restart: unless-stopped
+    networks:
+      - autostack-network
 
 networks:
   autostack-network:

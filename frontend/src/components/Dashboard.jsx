@@ -53,7 +53,7 @@ function DashboardCommandPalette({ isOpen, onClose, navItems, setActiveTab }) {
 export default function Dashboard() {
     const { tab } = useParams();
     const navigate = useNavigate();
-    const activeTab = tab || 'overview';
+    const activeTab = tab || 'environments';
     const setActiveTab = (t) => navigate(`/dashboard/${t}`);
     const [cmdOpen, setCmdOpen] = useState(false);
 

@@ -4,6 +4,7 @@ import { Cloud, Rocket, Check, ChevronRight, Loader2, HardDrive, Shield, Globe, 
 import { TerminalWindow, useCountUp } from '../components/ui/index';
 import { StatusDot } from '../components/ui/index';
 import { useToast } from '../context/ToastContext';
+import { useAuth as useClerkAuth } from '@clerk/react';
 import { supabase } from '../lib/supabase';
 import confetti from 'canvas-confetti';
 
@@ -25,9 +26,9 @@ function StepIndicator({ current }) {
 
 function Step1({ onNext, loading }) {
     const [provider, setProvider] = useState('aws');
-    const [accountId, setAccountId] = useState('');
+    const [accountId, setAccountId] = useState('367749063363');
     const [region, setRegion] = useState('us-east-1');
-    const [roleArn, setRoleArn] = useState('');
+    const [roleArn, setRoleArn] = useState('arn:aws:iam::367749063363:role/AutoStackDeploymentRole');
 
     const isAWS = provider === 'aws';
     const canProceed = accountId.length === 12 && roleArn.startsWith('arn:aws:iam');
@@ -116,21 +117,43 @@ function Step2({ onNext, loading }) {
     const [size, setSize] = useState('small');
     const [deploying, setDeploying] = useState(false);
     const [progress, setProgress] = useState([]);
+    const [logs, setLogs] = useState([]);
+    const [deploymentId, setDeploymentId] = useState(null);
     
-    // Deployment lifecycle simulation or real hook integration could go here
+    // Fetch real logs when deploying
+    useEffect(() => {
+        if (deploying && deploymentId) {
+            const fetchLogs = async () => {
+                const { data } = await supabase
+                    .from('build_log_entries')
+                    .select('text, level, timestamp')
+                    .eq('deployment_id', deploymentId)
+                    .order('timestamp', { ascending: true })
+                    .limit(10);
+
+                if (data) {
+                    setLogs(data);
+                }
+            };
+
+            const interval = setInterval(fetchLogs, 2000);
+            return () => clearInterval(interval);
+        }
+    }, [deploying, deploymentId]);
+
     const canDeploy = repoUrl.includes('github.com/');
 
     const handleDeploy = async () => {
         setDeploying(true);
         setProgress([
             { id: 1, label: 'Analyzing repository...', status: 'running' },
-            { id: 2, label: 'Planning infrastructure...', status: 'pending' },
-            { id: 3, label: 'Provisioning VPC & EKS...', status: 'pending' },
-            { id: 4, label: 'Building Docker image...', status: 'pending' }
+            { id: 2, label: 'Creating AWS resources...', status: 'pending' },
+            { id: 3, label: 'Building Docker image...', status: 'pending' },
+            { id: 4, label: 'Deploying application...', status: 'pending' }
         ]);
 
-        // Trigger real DIE analyze
-        await onNext({ repoUrl, size, setProgress });
+        // Trigger real deployment
+        await onNext({ repoUrl, size, setProgress, setDeploymentId });
     };
 
     if (deploying) {
@@ -151,11 +174,24 @@ function Step2({ onNext, loading }) {
                 </div>
                 <TerminalWindow title="AutoStack Provisioning">
                     <pre className="text-[10px] font-mono leading-relaxed" style={{ color: 'var(--term-text)' }}>
-                        [2026-03-13 14:02:11] STAGE 1: Repository analysis started...<br/>
-                        [2026-03-13 14:02:14] DETECTED: Node.js 20 + Express<br/>
-                        [2026-03-13 14:02:16] STAGE 2: Planning infrastructure for {size} profile...<br/>
-                        [2026-03-13 14:02:18] VPC created: vpc-0a2b3c4d5e (us-east-1)<br/>
-                        [2026-03-13 14:02:20] Provisioning EKS Cluster (Control Plane)...
+                        {logs.length > 0 ? (
+                            logs.map((log, i) => (
+                                <div key={i} className={
+                                    log.level === 'error' ? 'text-red-400' :
+                                    log.level === 'success' ? 'text-green-400' :
+                                    log.level === 'warn' ? 'text-yellow-400' :
+                                    'text-gray-300'
+                                }>
+                                    {log.text}
+                                </div>
+                            ))
+                        ) : (
+                            <>
+                                [2026-03-17] Starting deployment...<br/>
+                                [2026-03-17] Analyzing repository structure...<br/>
+                                [2026-03-17] Detecting framework and dependencies...<br/>
+                            </>
+                        )}
                     </pre>
                 </TerminalWindow>
             </div>
@@ -189,8 +225,9 @@ function Step2({ onNext, loading }) {
                 <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--text-muted)' }}>Infrastructure Size</label>
                 <div className="flex gap-4 mb-8">
                     {[
-                        { id: 'small', label: 'Small', desc: '~$187/mo', nodes: '2 vCPU' },
-                        { id: 'medium', label: '~$345/mo', nodes: '4 vCPU' },
+                        { id: 'small', label: 'Small', desc: '~$211/mo', nodes: '2 nodes, 2 vCPU, 4GB RAM' },
+                        { id: 'medium', label: 'Medium', desc: '~$334/mo', nodes: '3 nodes, 4 vCPU, 8GB RAM' },
+                        { id: 'large', label: 'Large', desc: '~$559/mo', nodes: '4 nodes, 8 vCPU, 16GB RAM' },
                     ].map(s => (
                         <button key={s.id} onClick={() => setSize(s.id)}
                             className={`flex-1 p-4 rounded-xl border text-left transition-all ${size === s.id ? 'border-blue-500 bg-blue-500/10' : 'border-[#334366] bg-[#0d1117] hover:border-gray-500'} cursor-pointer`}>
@@ -280,15 +317,29 @@ export default function OnboardingPage() {
     const [credentials, setCredentials] = useState(null);
     const [deployment, setDeployment] = useState(null);
     const [loading, setLoading] = useState(false);
+    const { getToken } = useClerkAuth();
     const toast = useToast();
 
     const handleStep1Next = async (c) => {
         setLoading(true);
         try {
             const { data, error } = await supabase.functions.invoke('aws-assume-role', {
-                body: c
+                body: {
+                    account_id: c.accountId,
+                    region: c.region,
+                    role_arn: c.roleArn,
+                    display_name: c.displayName,
+                }
             });
-            if (error || !data.success) throw new Error(error?.message || 'Verification failed');
+            
+            if (error) {
+                console.error('[Onboarding] Invoke error:', error);
+                throw new Error(error.message || 'Network error: Failed to reach verification service');
+            }
+            
+            if (!data?.success) {
+                throw new Error(data?.error || 'Verification failed: Service returned an unsuccessful response');
+            }
             
             setCredentials({ ...c, id: data.credential_id });
             setStep(2);
@@ -299,80 +350,110 @@ export default function OnboardingPage() {
         }
     };
 
-    const handleDeploy = async ({ repoUrl, size, setProgress }) => {
+    const handleDeploy = async ({ repoUrl, size, setProgress, setDeploymentId }) => {
         setLoading(true);
         try {
-            // 1. Resolve installation_id (First integration for simplicity)
-            const { data: integrations } = await supabase.from('integrations').select('installation_id').limit(1);
-            const installation_id = integrations?.[0]?.installation_id || 'test-install-id';
+            console.log('[Onboarding] Starting deployment for:', repoUrl);
 
-            // 2. Create Project
-            const projectName = repoUrl.split('/').pop().replace('.git', '');
-            const { data: project, error: projErr } = await supabase.from('projects').insert({
-                name: projectName,
-                repo_url: repoUrl,
-                cloud_credential_id: credentials.id,
-                org_id: credentials.org_id,
-                environment: 'production',
-                provisioning_status: 'pending'
-            }).select().single();
-
-            if (projErr) throw projErr;
-
-            // 3. Invoke DIE Analyze (Triggers the whole chain)
+            // Call die-analyze function directly
             const { data, error } = await supabase.functions.invoke('die-analyze', {
-                body: { project_id: project.id, installation_id, size }
+                body: {
+                    github_repo_url: repoUrl,
+                    branch: 'main',
+                    org_id: '00000000-0000-0000-0000-000000000001' // Default test org
+                }
             });
 
-            if (error || !data.success) throw new Error(error?.message || 'Analysis failed');
+            console.log('[Onboarding] Analysis response:', { data, error });
 
-            // 4. Poll for DIE Stage Updates
+            if (error) {
+                console.error('[Onboarding] Function error:', error);
+                throw new Error(error.message || 'Failed to analyze repository');
+            }
+
+            if (!data || !data.deployment_id) {
+                throw new Error('Analysis failed: No deployment ID returned');
+            }
+
+            const deploymentId = data.deployment_id;
+            setDeploymentId(deploymentId);
+            console.log('[Onboarding] Deployment ID:', deploymentId);
+
+            // Update progress to show analysis complete
+            setProgress([
+                { id: 1, label: 'Analyzing repository...', status: 'done' },
+                { id: 2, label: 'Planning infrastructure...', status: 'running' },
+                { id: 3, label: 'Creating AWS resources...', status: 'pending' },
+                { id: 4, label: 'Building Docker image...', status: 'pending' }
+            ]);
+
+            // Start build pipeline
+            const { data: buildData, error: buildError } = await supabase.functions.invoke('setup-build-pipeline', {
+                body: {
+                    deployment_id: deploymentId,
+                    org_id: '00000000-0000-0000-0000-000000000001',
+                    classification: data.classification,
+                    dockerfile_content: data.dockerfile,
+                    github_repo_url: repoUrl,
+                    branch: 'main'
+                }
+            });
+
+            if (buildError) {
+                console.error('[Onboarding] Build setup error:', buildError);
+                throw new Error(buildError.message || 'Failed to setup build pipeline');
+            }
+
+            console.log('[Onboarding] Build pipeline setup:', buildData);
+
+            // Poll for deployment status
             const pollDeployment = async () => {
-                const { data: pData } = await supabase.from('projects')
-                    .select('die_stage, provisioning_status, live_url')
-                    .eq('id', project.id)
+                const { data: deployment } = await supabase
+                    .from('deployments')
+                    .select('current_stage, status, live_url')
+                    .eq('id', deploymentId)
                     .single();
-                
-                if (pData) {
-                    const { die_stage, provisioning_status, live_url } = pData;
 
-                    if (provisioning_status === 'live') {
-                        setDeployment({ live_url });
+                if (deployment) {
+                    console.log('[Onboarding] Deployment status:', deployment);
+
+                    // Update progress based on stage
+                    const stageMap = {
+                        'provisioning_infra': 2,
+                        'building_image': 3,
+                        'deploying': 3,
+                        'active': 4
+                    };
+
+                    const currentStep = stageMap[deployment.current_stage] || 1;
+                    
+                    setProgress([
+                        { id: 1, label: 'Analyzing repository...', status: 'done' },
+                        { id: 2, label: 'Creating AWS resources...', status: currentStep >= 2 ? (currentStep > 2 ? 'done' : 'running') : 'pending' },
+                        { id: 3, label: 'Building Docker image...', status: currentStep >= 3 ? (currentStep > 3 ? 'done' : 'running') : 'pending' },
+                        { id: 4, label: 'Deploying application...', status: currentStep >= 4 ? 'done' : 'pending' }
+                    ]);
+
+                    if (deployment.current_stage === 'active' && deployment.live_url) {
+                        setDeployment({ live_url: deployment.live_url });
                         setStep(3);
                         return;
                     }
-                    if (provisioning_status === 'failed') throw new Error('Deployment failed');
-                    
-                    // Update progress UI based on engine stages
-                    const stages = [
-                        { label: 'Analyzing repository...', key: 'analyzing' },
-                        { label: 'Planning infrastructure...', key: 'planning' },
-                        { label: 'Provisioning VPC & EKS...', keys: ['VPC', 'EKS'] },
-                        { label: 'Configuring Networking...', keys: ['ALB', 'kubeconfig'] }
-                    ];
 
-                    setProgress(stages.map((s, idx) => {
-                        // Simple logic for progress: if a later stage is active, previous are done
-                        const currentStageIdx = stages.findIndex(st => 
-                            (st.key && die_stage === st.key) || 
-                            (st.keys && st.keys.some(k => die_stage?.includes(k)))
-                        );
-
-                        let status = 'pending';
-                        if (idx < currentStageIdx) status = 'done';
-                        else if (idx === currentStageIdx) status = 'running';
-
-                        return { id: idx + 1, label: s.label, status };
-                    }));
+                    if (deployment.current_stage === 'failed') {
+                        throw new Error('Deployment failed');
+                    }
                 }
-                setTimeout(pollDeployment, 4000);
+
+                setTimeout(pollDeployment, 3000);
             };
 
             pollDeployment();
 
         } catch (err) {
+            console.error('[Onboarding] Deployment error:', err);
             toast.error(err.message || 'Deployment failed');
-            setStep(2); 
+            setStep(2);
         } finally {
             setLoading(false);
         }

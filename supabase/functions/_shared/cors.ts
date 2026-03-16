@@ -1,7 +1,7 @@
 export const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, GET, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Authorization, Content-Type, X-Hub-Signature-256, X-GitHub-Event',
+  'Access-Control-Allow-Headers': 'Authorization, Content-Type, X-Hub-Signature-256, X-GitHub-Event, x-client-info, apikey',
 }
 
 export function corsResponse(): Response {

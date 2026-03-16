@@ -9,7 +9,6 @@ import OnboardingPage from './pages/OnboardingPage';
 
 function AuthGuard({ children }) {
   const { isLoaded, isSignedIn } = useAuth();
-
   if (!isLoaded) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: 'var(--bg-primary, #0a0a0f)' }}>
@@ -18,7 +17,6 @@ function AuthGuard({ children }) {
       </div>
     );
   }
-
   if (!isSignedIn) return <Navigate to="/login" replace />;
   return children;
 }
