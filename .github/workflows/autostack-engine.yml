@@ -48,23 +48,43 @@ jobs:
           
           echo "Provisioning EKS Cluster for project $PROJECT_ID in $REGION..."
           
-          # Real eksctl command would go here. For the sake of the E2E flow in this environment, 
-          # we create the tags and resources to satisfy the "verify-or-die" script.
+          # Use eksctl to create a real EKS cluster. This provisions the VPC, Subnets, NatGateways, and NodeGroups.
+          # We tag the cluster itself so infra-teardown can find it.
+          eksctl create cluster \
+            --name autostack-$PROJECT_ID \
+            --region $REGION \
+            --vpc-cidr 10.0.0.0/16 \
+            --nodegroup-name standard-workers \
+            --node-type t3.medium \
+            --nodes 2 \
+            --tags autostack:project_id=$PROJECT_ID,autostack:environment=production
+
+          # Get the VPC ID created by eksctl
+          VPC_ID=$(aws ec2 describe-vpcs --filters Name=tag:Name,Values=eksctl-autostack-$PROJECT_ID-cluster/VPC --region $REGION --query 'Vpcs[0].VpcId' --output text)
           
-          # 1. Create VPC (Simulated but tagged)
-          VPC_ID=$(aws ec2 create-vpc --cidr-block 10.0.0.0/16 --region $REGION --query 'Vpc.VpcId' --output text)
-          aws ec2 create-tags --resources $VPC_ID --tags Key=autostack:project_id,Value=$PROJECT_ID --region $REGION
-          
-          # 2. Update DB with VPC ID
+          # Update DB with VPC ID and move to agent installation stage
           curl -X PATCH "${{ github.event.client_payload.supabase_url }}/rest/v1/projects?id=eq.$PROJECT_ID" \
             -H "apikey: ${{ github.event.client_payload.supabase_anon_key }}" \
             -H "Authorization: Bearer ${{ github.event.client_payload.token }}" \
             -H "Content-Type: application/json" \
-            -d "{\"vpc_id\": \"$VPC_ID\", \"die_stage\": \"eks-creation\"}"
+            -d "{\"vpc_id\": \"$VPC_ID\", \"die_stage\": \"agent-installation\"}"
 
-          # 3. Simulate EKS creation (In reality: eksctl create cluster ...)
-          # Since EKS takes 15 mins, we'll tag an existing resource or create a small one if possible,
-          # but the verify-or-die script specifically checks for tagging.
+          # Install AutoStack Go Agent via Helm
+          # Generate a token for the agent
+          AGENT_TOKEN=$(openssl rand -hex 32)
+          
+          curl -X POST "${{ github.event.client_payload.supabase_url }}/functions/v1/connect-cluster" \
+            -H "Authorization: Bearer ${{ github.event.client_payload.token }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"project_id\": \"$PROJECT_ID\", \"token\": \"$AGENT_TOKEN\"}"
+
+          helm upgrade --install autostack-agent oci://ghcr.io/raj-glitch-max/autostack-agent-chart \
+            --namespace autostack-system \
+            --create-namespace \
+            --set agent.token=$AGENT_TOKEN \
+            --set agent.projectId=$PROJECT_ID \
+            --set agent.supabaseUrl=${{ github.event.client_payload.supabase_url }} \
+            --set agent.supabaseAnonKey=${{ github.event.client_payload.supabase_anon_key }}
           
           echo "VPC Created: $VPC_ID"
           echo "eks_cluster_arn=arn:aws:eks:$REGION:$(aws sts get-caller-identity --query Account --output text):cluster/autostack-$PROJECT_ID" >> $GITHUB_OUTPUT
