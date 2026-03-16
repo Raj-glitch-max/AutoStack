@@ -1,10 +1,21 @@
-// Package main is the entrypoint for the AutoStack cluster agent.
-// It wires together config, client, metrics, and event subsystems.
+// Package main is the entry point for the AutoStack Kubernetes agent.
+//
+// The agent runs inside the user's cluster and:
+// 1. Registers with the control plane using a one-time token
+// 2. Sends periodic heartbeats
+// 3. Watches Kubernetes Warning events and reports incidents
+// 4. Collects cluster metrics and workload inventory
+//
+// Required environment variables (set by Helm chart):
+//   - AUTOSTACK_AGENT_TOKEN:       One-time registration token
+//   - AUTOSTACK_CLUSTER_ID:        UUID of the cluster in AutoStack DB
+//   - AUTOSTACK_CONTROL_PLANE_URL: Base URL of the control plane functions
 package main
 
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -14,109 +25,119 @@ import (
 	"github.com/raj-glitch-max/autostack/agent/internal/client"
 	"github.com/raj-glitch-max/autostack/agent/internal/collector"
 	"github.com/raj-glitch-max/autostack/agent/internal/config"
-
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
 
 func main() {
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+	log.Println("[Agent] Starting AutoStack agent...")
+
 	cfg := config.Load()
-	log.Printf("AutoStack Agent %s starting for cluster %s", cfg.AgentVersion, cfg.ClusterID)
 
-	// Graceful shutdown on SIGINT/SIGTERM
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
-
-	// Initialize control plane client
-	cpClient := client.New(cfg.ControlPlaneURL, cfg.ClusterID, cfg.AgentVersion)
-
-	// Register: exchange one-time token for JWT
-	jwt, err := cpClient.Register(ctx, cfg.AgentToken)
-	if err != nil {
-		log.Fatalf("Registration failed: %v", err)
-	}
-	log.Println("Registration successful — JWT obtained")
-	_ = jwt // JWT is stored inside cpClient
-
-	// Initialize Kubernetes client
+	// Initialize Kubernetes client (in-cluster config)
 	k8sConfig, err := rest.InClusterConfig()
 	if err != nil {
-		log.Fatalf("In-cluster K8s config failed: %v", err)
+		log.Fatalf("[Agent] Failed to load in-cluster config: %v", err)
 	}
+
 	k8sClient, err := kubernetes.NewForConfig(k8sConfig)
 	if err != nil {
-		log.Fatalf("K8s client creation failed: %v", err)
+		log.Fatalf("[Agent] Failed to create K8s client: %v", err)
 	}
 
-	// Start background JWT rotation
+	// Create control plane HTTP client
+	cpClient := client.New(cfg.ControlPlaneURL, cfg.ClusterID, cfg.AgentVersion)
+
+	// Register with control plane using one-time token
+	log.Println("[Agent] Registering with control plane...")
+	jwt, err := cpClient.Register(context.Background(), cfg.AgentToken)
+	if err != nil {
+		log.Fatalf("[Agent] Registration failed: %v", err)
+	}
+	log.Println("[Agent] Registration successful")
+	cpClient.SetJWT(jwt)
+
+	// Graceful shutdown context
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGTERM, syscall.SIGINT)
+
+	// Goroutine 1: JWT rotation
 	go cpClient.RotateJWTLoop(ctx)
 
-	// Start heartbeat loop
-	go heartbeatLoop(ctx, cpClient, cfg)
+	// Goroutine 2: Heartbeat
+	go runHeartbeat(ctx, cpClient, cfg.HeartbeatInterval)
 
-	// Start metrics collector
-	mc := collector.NewMetricsCollector(k8sClient)
-	go mc.RunLoop(ctx, cfg.MetricsInterval, func(sample *collector.MetricsSample) error {
-		payload := map[string]interface{}{
-			"cluster_id": cfg.ClusterID,
-			"type":       "telemetry",
-			"data":       sample,
-		}
-		return cpClient.Send(ctx, "/agent-metrics", payload)
-	})
-
-	// Start event watcher with incident channel
-	incidentCh := make(chan collector.IncidentBundle, 100)
+	// Goroutine 3: Event watcher → incident detection
+	incidentCh := make(chan collector.IncidentBundle, 50)
 	watcher := collector.NewEventWatcher(k8sClient, cfg.ClusterID)
 	go watcher.Watch(ctx, incidentCh)
-
-	// Drain incidents and send to control plane
 	go collector.DrainAndSend(ctx, incidentCh, func(incident collector.IncidentBundle) error {
-		payload := map[string]interface{}{
-			"cluster_id": cfg.ClusterID,
+		return cpClient.Send(ctx, "/agent-metrics", map[string]interface{}{
 			"type":       "incident",
-			"data":       incident,
-		}
-		return cpClient.Send(ctx, "/agent-metrics", payload)
+			"cluster_id": cfg.ClusterID,
+			"incident":   incident,
+		})
 	})
 
-	log.Println("All subsystems running — agent is operational")
+	// Goroutine 4: Metrics collection
+	metricsCollector := collector.NewMetricsCollector(k8sClient)
+	go metricsCollector.RunLoop(ctx, cfg.MetricsInterval, func(sample *collector.MetricsSample) error {
+		return cpClient.Send(ctx, "/agent-metrics", map[string]interface{}{
+			"type":       "metrics",
+			"cluster_id": cfg.ClusterID,
+			"metrics":    sample,
+		})
+	})
 
-	// Block until shutdown signal
-	<-ctx.Done()
-	log.Println("Shutdown signal received — exiting gracefully")
+	// Goroutine 5: Inventory collection (every 5 minutes)
+	inventoryCollector := collector.NewInventoryCollector(k8sClient)
+	go inventoryCollector.RunLoop(ctx, 5*time.Minute, func(inv *collector.InventorySnapshot) error {
+		return cpClient.Send(ctx, "/agent-metrics", map[string]interface{}{
+			"type":       "inventory",
+			"cluster_id": cfg.ClusterID,
+			"inventory":  inv,
+		})
+	})
+
+	log.Println("[Agent] All goroutines started. Agent is running.")
+
+	// Block until signal
+	sig := <-sigCh
+	log.Printf("[Agent] Received signal %v — shutting down gracefully...", sig)
+	cancel()
+
+	// Allow goroutines to wind down
+	time.Sleep(2 * time.Second)
+	log.Println("[Agent] Shutdown complete.")
 }
 
-func heartbeatLoop(ctx context.Context, cpClient *client.Client, cfg *config.Config) {
-	ticker := time.NewTicker(cfg.HeartbeatInterval)
+func runHeartbeat(ctx context.Context, cpClient *client.Client, interval time.Duration) {
+	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
-
-	// Fire initial heartbeat immediately
-	sendHeartbeat(ctx, cpClient, cfg)
 
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			sendHeartbeat(ctx, cpClient, cfg)
+			hostname, _ := os.Hostname()
+			payload := map[string]interface{}{
+				"hostname":    hostname,
+				"timestamp":   time.Now().UTC().Format(time.RFC3339),
+				"agent_version": "1.1.0",
+			}
+			data, _ := json.Marshal(payload)
+			_ = data // Ensure no unused import
+
+			if err := cpClient.Send(ctx, "/agent-heartbeat", payload); err != nil {
+				log.Printf("[Heartbeat] Failed: %v", err)
+			} else {
+				fmt.Println("[Heartbeat] OK")
+			}
 		}
 	}
-}
-
-func sendHeartbeat(ctx context.Context, cpClient *client.Client, cfg *config.Config) {
-	payload := map[string]interface{}{
-		"cluster_id": cfg.ClusterID,
-		"version":    cfg.AgentVersion,
-		"timestamp":  time.Now().Format(time.RFC3339),
-	}
-
-	if err := cpClient.Send(ctx, "/agent-heartbeat", payload); err != nil {
-		log.Printf("[Heartbeat] Failed: %v", err)
-	}
-}
-
-// marshalJSON is a helper for consistent JSON encoding with error handling.
-func marshalJSON(v interface{}) ([]byte, error) {
-	return json.Marshal(v)
 }
